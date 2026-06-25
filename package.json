@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "extract-abis": "node scripts/extract-abis.mjs"
   },
   "dependencies": {
     "@rainbow-me/rainbowkit": "^2.2.11",

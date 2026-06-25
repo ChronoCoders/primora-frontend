@@ -1,0 +1,11 @@
+{
+  "_comment": "Anvil (chainId 31337) deterministic addresses for the current Deploy.s.sol deployment order. Update if the deploy order changes. Mirrors the backend deployments/local.json structure.",
+  "chainId": 31337,
+  "primToken": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+  "houseEdge": "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+  "oracleAggregator": "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853",
+  "treasury": "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318",
+  "nodeRegistry": "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e",
+  "stakingContract": "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82",
+  "miningContract": "0x0B306BF915C4d645ff596e518fAf3F9669b97016"
+}

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Primora • Exchange</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; border: 0; }
+    :root { --bg: #0a0a0a; --surface: #111111; --border: #1f1f1f; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: #e4e4e7; -webkit-font-smoothing: antialiased; }
+    .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 600; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; }
+    .pulse { animation: pulse 2s cubic-bezier(.4,0,.6,1) infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+    .sidebar { width: 256px; border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; background: var(--bg); }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+    .topbar { height: 73px; border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; background: var(--bg); }
+    .content { flex: 1; overflow: auto; padding: 24px; }
+    .inner { max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    .logo-area { height: 73px; padding: 0 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    .logo-icon { width: 36px; height: 36px; background: #F59E0B; border-radius: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 16px; font-size: 14px; font-weight: 500; color: #71717a; border-radius: 10px; text-decoration: none; transition: color .15s, background .15s; }
+    .nav-link:hover { color: #e4e4e7; background: #111; }
+    .nav-link.active { background: #1f1f1f; color: #fff; border-left: 2px solid #F59E0B; padding-left: 14px; }
+    .wallet-area { padding: 16px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    .tab-btn { padding: 8px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid #1f1f1f; background: transparent; color: #71717a; font-family: inherit; transition: all .15s; }
+    .tab-btn.active { background: #1f1f1f; color: #fff; border-color: #2a2a2a; }
+    .stable-btn { padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; border: 1px solid #1f1f1f; background: transparent; color: #71717a; transition: all .15s; }
+    .stable-btn.active { border-color: #F59E0B; background: rgba(245,158,11,.08); color: #F59E0B; }
+    .amount-input { width: 100%; padding: 14px 16px; background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 12px; font-size:16px; color: #e4e4e7; font-family: monospace; outline: none; }
+    .amount-input:focus { border-color: #F59E0B; }
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(6px); z-index: 50; align-items: center; justify-content: center; }
+    .modal-bg.open { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 28px; width: 100%; max-width: 380px; margin: 16px; }
+    .btn-primary { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; background: #F59E0B; color: #0a0a0a; font-weight: 700; font-size: 13px; border-radius: 12px; cursor: pointer; border: none; font-family: inherit; }
+    .btn-ghost { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; background: #1f1f1f; color: #e4e4e7; font-weight: 600; font-size: 13px; border-radius: 12px; cursor: pointer; border: none; font-family: inherit; }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo-area">
+      <div class="logo-icon"><i class="fa-solid fa-shield-halved" style="color:#0a0a0a;font-size:16px;"></i></div>
+      <span class="font-display" style="font-size:20px;letter-spacing:-.01em;">Primora</span>
+    </div>
+    <div style="padding:12px;flex:1;">
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <a href="overview.html" class="nav-link"><i class="fa-solid fa-chart-line" style="width:16px;"></i><span>Overview</span></a>
+        <a href="mine.html" class="nav-link"><i class="fa-solid fa-microchip" style="width:16px;"></i><span>Mine</span></a>
+        <a href="mymining.html" class="nav-link"><i class="fa-solid fa-user" style="width:16px;"></i><span>My Mining</span></a>
+        <a href="stake.html" class="nav-link"><i class="fa-solid fa-lock" style="width:16px;"></i><span>Stake</span></a>
+        <a href="exchange.html" class="nav-link active"><i class="fa-solid fa-exchange-alt" style="width:16px;color:#F59E0B;"></i><span>Exchange</span></a>
+        <a href="sites.html" class="nav-link"><i class="fa-solid fa-globe" style="width:16px;"></i><span>Sites</span></a>
+        <a href="wallet_payouts.html" class="nav-link"><i class="fa-solid fa-wallet" style="width:16px;"></i><span>Wallet &amp; Payouts</span></a>
+        <a href="alerts.html" class="nav-link"><i class="fa-solid fa-bell" style="width:16px;"></i><span>Alerts</span>
+          <span style="margin-left:auto;background:#ef4444;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:99px;">4</span>
+        </a>
+      </div>
+    </div>
+    <div class="wallet-area">
+      <div style="width:32px;height:32px;background:#1f1f1f;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i class="fa-solid fa-user" style="font-size:12px;color:#71717a;"></i>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:500;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">0x71C...9f3A</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+          <span class="pulse" style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;"></span>
+          <span style="font-size:10px;color:#4ade80;">Connected · KYC Full</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="font-display" style="font-size:17px;">Exchange</span>
+        <div style="padding:4px 12px;background:#111;border:1px solid #1f1f1f;border-radius:99px;display:flex;align-items:center;gap:8px;">
+          <span class="pulse" style="width:8px;height:8px;border-radius:50%;background:#4ade80;display:inline-block;"></span>
+          <span style="font-size:11px;color:#4ade80;font-weight:500;">Mainnet · Polygon + Ethereum</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="padding:6px 12px;background:#111;border:1px solid #2a2a2a;border-radius:99px;display:flex;align-items:center;gap:8px;">
+          <i class="fa-solid fa-shield-halved" style="color:#F59E0B;font-size:11px;"></i>
+          <span style="font-size:10px;color:#71717a;">All mining is virtual. No real commodities.</span>
+        </div>
+        <div style="padding:5px 12px;background:#111;border-radius:99px;display:flex;align-items:center;gap:6px;font-size:12px;">
+          <span style="color:#71717a;">KYC:</span><span style="font-weight:600;color:#4ade80;">Full</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="inner">
+
+        <div>
+          <h1 class="font-display" style="font-size:22px;letter-spacing:-.01em;">Exchange</h1>
+          <p style="font-size:13px;color:#71717a;margin-top:4px;">Buy or sell PRM via Uniswap. Minimum transaction: $50.</p>
+        </div>
+
+        <!-- Price + balances -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+          <div class="card" style="padding:18px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.06em;color:#52525b;text-transform:uppercase;margin-bottom:6px;">PRM Price</div>
+            <div style="font-size:24px;font-weight:700;font-family:'Space Grotesk',sans-serif;color:#F59E0B;">$5.81</div>
+            <div style="font-size:11px;color:#4ade80;margin-top:2px;">+2.4% (24h)</div>
+          </div>
+          <div class="card" style="padding:18px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.06em;color:#52525b;text-transform:uppercase;margin-bottom:6px;">Your PRM Balance</div>
+            <div style="font-size:24px;font-weight:700;font-family:'Space Grotesk',sans-serif;font-variant-numeric:tabular-nums;">4,872.3</div>
+            <div style="font-size:11px;color:#71717a;margin-top:2px;">≈ $28,308</div>
+          </div>
+          <div class="card" style="padding:18px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.06em;color:#52525b;text-transform:uppercase;margin-bottom:6px;">Stablecoin Balance</div>
+            <div style="font-size:24px;font-weight:700;font-family:'Space Grotesk',sans-serif;font-variant-numeric:tabular-nums;">$2,840</div>
+            <div style="font-size:11px;color:#71717a;margin-top:2px;">USDC + USDT combined</div>
+          </div>
+        </div>
+
+        <!-- Uniswap badge -->
+        <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:#111;border:1px solid #1f1f1f;border-radius:12px;font-size:12px;">
+          <i class="fa-solid fa-circle-nodes" style="color:#ff007a;font-size:14px;"></i>
+          <span style="color:#71717a;">Trades execute via</span>
+          <span style="font-weight:700;color:#e4e4e7;">Uniswap V3</span>
+          <span style="color:#71717a;">·</span>
+          <span style="color:#71717a;">PRM/USDC pool</span>
+          <span style="margin-left:auto;font-size:11px;color:#52525b;">Slippage: 0.5% default</span>
+        </div>
+
+        <!-- Buy / Sell tabs -->
+        <div class="card" style="padding:24px;">
+          <div style="display:flex;gap:8px;margin-bottom:20px;">
+            <button class="tab-btn active" id="tab-buy" onclick="setTab('buy')">Buy PRM</button>
+            <button class="tab-btn" id="tab-sell" onclick="setTab('sell')">Sell PRM</button>
+          </div>
+
+          <!-- Stablecoin selector -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+            <span style="font-size:12px;color:#71717a;">Pay with:</span>
+            <button class="stable-btn active" id="s-usdc" onclick="setStable('USDC')">USDC</button>
+            <button class="stable-btn" id="s-usdt" onclick="setStable('USDT')">USDT</button>
+          </div>
+
+          <!-- Input -->
+          <div id="buy-panel">
+            <div style="margin-bottom:12px;">
+              <label style="font-size:11px;color:#71717a;display:block;margin-bottom:6px;">You pay (<span id="buy-stable-label">USDC</span>)</label>
+              <input type="number" class="amount-input" id="buy-input" placeholder="Min. $50.00" oninput="calcBuy()">
+              <div style="font-size:11px;color:#52525b;margin-top:4px;">Minimum: $50.00</div>
+            </div>
+            <div style="text-align:center;padding:8px 0;color:#52525b;">
+              <i class="fa-solid fa-arrow-down"></i>
+            </div>
+            <div style="margin-bottom:16px;">
+              <label style="font-size:11px;color:#71717a;display:block;margin-bottom:6px;">You receive (PRM)</label>
+              <div style="padding:14px 16px;background:#0a0a0a;border:1px solid #1f1f1f;border-radius:12px;font-size:16px;font-family:monospace;color:#4ade80;font-weight:600;" id="buy-output">--</div>
+            </div>
+            <div style="background:#0d0d0f;border:1px solid #1a1a1a;border-radius:12px;padding:14px;margin-bottom:16px;display:flex;flex-direction:column;gap:8px;font-size:12px;">
+              <div style="display:flex;justify-content:space-between;"><span style="color:#71717a;">PRM price</span><span style="font-weight:600;">$5.81</span></div>
+              <div style="display:flex;justify-content:space-between;"><span style="color:#71717a;">Buy spread</span><span style="font-weight:600;color:#F59E0B;">1.5%</span></div>
+              <div style="display:flex;justify-content:space-between;"><span style="color:#71717a;">Route</span><span style="font-weight:600;">Uniswap V3</span></div>
+            </div>
+            <button onclick="openConfirm('buy')" class="btn-primary" style="width:100%;justify-content:center;padding:14px;">
+              <i class="fa-solid fa-bolt" style="font-size:12px;"></i> Buy PRM
+            </button>
+          </div>
+
+          <div id="sell-panel" style="display:none;">
+            <div style="margin-bottom:12px;">
+              <label style="font-size:11px;color:#71717a;display:block;margin-bottom:6px;">You sell (PRM)</label>
+              <input type="number" class="amount-input" id="sell-input" placeholder="Amount in PRM" oninput="calcSell()">
+              <div style="font-size:11px;color:#52525b;margin-top:4px;">Min. value after spread: $50.00</div>
+            </div>
+            <div style="text-align:center;padding:8px 0;color:#52525b;">
+              <i class="fa-solid fa-arrow-down"></i>
+            </div>
+            <div style="margin-bottom:16px;">
+              <label style="font-size:11px;color:#71717a;display:block;margin-bottom:6px;">You receive (<span id="sell-stable-label">USDC</span>)</label>
+              <div style="padding:14px 16px;background:#0a0a0a;border:1px solid #1f1f1f;border-radius:12px;font-size:16px;font-family:monospace;color:#4ade80;font-weight:600;" id="sell-output">--</div>
+            </div>
+            <div style="background:#0d0d0f;border:1px solid #1a1a1a;border-radius:12px;padding:14px;margin-bottom:16px;display:flex;flex-direction:column;gap:8px;font-size:12px;">
+              <div style="display:flex;justify-content:space-between;"><span style="color:#71717a;">PRM price</span><span style="font-weight:600;">$5.81</span></div>
+              <div style="display:flex;justify-content:space-between;"><span style="color:#71717a;">Sell spread</span><span style="font-weight:600;color:#F59E0B;">2.5%</span></div>
+              <div style="display:flex;justify-content:space-between;"><span style="color:#71717a;">Route</span><span style="font-weight:600;">Uniswap V3</span></div>
+            </div>
+            <button onclick="openConfirm('sell')" class="btn-primary" style="width:100%;justify-content:center;padding:14px;background:#ef4444;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+              <i class="fa-solid fa-arrow-up" style="font-size:12px;"></i> Sell PRM
+            </button>
+          </div>
+        </div>
+
+        <!-- Spread info -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div style="padding:14px 16px;background:#111;border:1px solid #1f1f1f;border-radius:14px;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-size:11px;color:#71717a;">Buy spread</div>
+              <div style="font-size:20px;font-weight:700;color:#F59E0B;">1.5%</div>
+            </div>
+            <div style="font-size:11px;color:#52525b;text-align:right;">Applied to<br>every purchase</div>
+          </div>
+          <div style="padding:14px 16px;background:#111;border:1px solid #1f1f1f;border-radius:14px;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-size:11px;color:#71717a;">Sell spread</div>
+              <div style="font-size:20px;font-weight:700;color:#F59E0B;">2.5%</div>
+            </div>
+            <div style="font-size:11px;color:#52525b;text-align:right;">Applied to<br>every sale</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-bg" id="confirm-modal">
+  <div class="modal">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <div style="width:40px;height:40px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+        <i class="fa-solid fa-exchange-alt" style="color:#F59E0B;font-size:15px;"></i>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:15px;" id="modal-title">Confirm Trade</div>
+        <div style="font-size:12px;color:#71717a;margin-top:2px;">Via Uniswap V3</div>
+      </div>
+    </div>
+    <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:14px;padding:16px;margin-bottom:14px;display:flex;flex-direction:column;gap:8px;font-size:13px;">
+      <div style="display:flex;justify-content:space-between;"><span style="color:#71717a;">You pay</span><span style="font-weight:600;" id="modal-pay">--</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:#71717a;">You receive</span><span style="font-weight:600;color:#4ade80;" id="modal-receive">--</span></div>
+      <div style="display:flex;justify-content:space-between;border-top:1px solid #1f1f1f;padding-top:8px;">
+        <span style="color:#71717a;">Spread</span><span style="font-weight:600;color:#F59E0B;" id="modal-spread">1.5%</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span style="color:#71717a;">Route</span><span style="font-weight:600;">Uniswap V3</span>
+      </div>
+    </div>
+    <div style="background:rgba(245,158,11,.04);border:1px solid rgba(245,158,11,.1);border-radius:12px;padding:12px;margin-bottom:14px;font-size:11px;color:#71717a;line-height:1.6;">
+      All mining on Primora is virtual. PRM is a utility token. Its value can go up or down. You may receive less than the displayed amount due to price movement.
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+      <input type="checkbox" id="trade-confirm-check" style="width:14px;height:14px;cursor:pointer;accent-color:#F59E0B;">
+      <label for="trade-confirm-check" style="font-size:12px;color:#71717a;cursor:pointer;">I understand and accept the risks</label>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <button onclick="closeConfirm()" class="btn-ghost" style="width:100%;justify-content:center;">Cancel</button>
+      <button onclick="confirmTrade()" class="btn-primary" style="width:100%;justify-content:center;">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const PRM_PRICE = 5.81;
+  let currentTab = 'buy';
+  let selectedStable = 'USDC';
+
+  function setTab(tab) {
+    currentTab = tab;
+    document.getElementById('tab-buy').classList.toggle('active', tab === 'buy');
+    document.getElementById('tab-sell').classList.toggle('active', tab === 'sell');
+    document.getElementById('buy-panel').style.display = tab === 'buy' ? 'block' : 'none';
+    document.getElementById('sell-panel').style.display = tab === 'sell' ? 'block' : 'none';
+  }
+
+  function setStable(s) {
+    selectedStable = s;
+    document.getElementById('s-usdc').classList.toggle('active', s === 'USDC');
+    document.getElementById('s-usdt').classList.toggle('active', s === 'USDT');
+    document.getElementById('buy-stable-label').textContent = s;
+    document.getElementById('sell-stable-label').textContent = s;
+  }
+
+  function calcBuy() {
+    const amount = parseFloat(document.getElementById('buy-input').value) || 0;
+    if (amount < 50) { document.getElementById('buy-output').textContent = '--'; return; }
+    const prm = ((amount * (1 - 0.015)) / PRM_PRICE).toFixed(4);
+    document.getElementById('buy-output').textContent = Number(prm).toLocaleString(undefined, {minimumFractionDigits:2}) + ' PRM';
+  }
+
+  function calcSell() {
+    const amount = parseFloat(document.getElementById('sell-input').value) || 0;
+    if (amount <= 0) { document.getElementById('sell-output').textContent = '--'; return; }
+    const stable = (amount * PRM_PRICE * (1 - 0.025)).toFixed(2);
+    document.getElementById('sell-output').textContent = '$' + Number(stable).toLocaleString(undefined, {minimumFractionDigits:2}) + ' ' + selectedStable;
+  }
+
+  function openConfirm(type) {
+    if (type === 'buy') {
+      const amount = parseFloat(document.getElementById('buy-input').value) || 0;
+      if (amount < 50) { showToast('Minimum $50.00 required'); return; }
+      const prm = ((amount * 0.985) / PRM_PRICE).toFixed(2);
+      document.getElementById('modal-title').textContent = 'Confirm Purchase';
+      document.getElementById('modal-pay').textContent = '$' + amount.toFixed(2) + ' ' + selectedStable;
+      document.getElementById('modal-receive').textContent = prm + ' PRM';
+      document.getElementById('modal-spread').textContent = '1.5%';
+    } else {
+      const amount = parseFloat(document.getElementById('sell-input').value) || 0;
+      if (amount <= 0) { showToast('Enter an amount to sell'); return; }
+      const stable = (amount * PRM_PRICE * 0.975).toFixed(2);
+      document.getElementById('modal-title').textContent = 'Confirm Sale';
+      document.getElementById('modal-pay').textContent = amount.toLocaleString() + ' PRM';
+      document.getElementById('modal-receive').textContent = '$' + stable + ' ' + selectedStable;
+      document.getElementById('modal-spread').textContent = '2.5%';
+    }
+    document.getElementById('trade-confirm-check').checked = false;
+    document.getElementById('confirm-modal').classList.add('open');
+  }
+
+  function closeConfirm() { document.getElementById('confirm-modal').classList.remove('open'); }
+
+  function confirmTrade() {
+    if (!document.getElementById('trade-confirm-check').checked) { showToast('Please confirm the terms'); return; }
+    closeConfirm();
+    showToast('Trade submitted · Pending on Uniswap');
+  }
+
+  document.getElementById('confirm-modal').addEventListener('click', function(e) { if (e.target === this) closeConfirm(); });
+
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1a1a1a;border:1px solid #2a2a2a;padding:10px 18px;border-radius:14px;display:flex;align-items:center;gap:10px;font-size:13px;z-index:9999;';
+    t.innerHTML = '<i class="fa-solid fa-check-circle" style="color:#4ade80;"></i><span>' + msg + '</span>';
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(()=>t.remove(),300); }, 2400);
+  }
+</script>
+</body>
+</html>

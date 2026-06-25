@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Primora • Sites</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+
+    :root { --accent: #F59E0B; }
+
+    body { font-family: 'Inter', system-ui, sans-serif; }
+
+    .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 600; }
+
+    .primora-dark { background-color: #0a0a0a; }
+
+    .card { background-color: #111111; border: 1px solid #1f1f1f; }
+
+    .metric-value { font-variant-numeric: tabular-nums; }
+
+    .nav-active {
+      background-color: #1f1f1f;
+      color: white;
+      border-left: 2px solid #F59E0B;
+      padding-left: calc(1rem - 2px);
+    }
+
+    .status-dot { animation: pulse 2s cubic-bezier(0.4, 0.0, 0.2, 1) infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+  </style>
+</head>
+<body class="primora-dark text-zinc-200">
+<div class="flex h-screen overflow-hidden">
+
+  <!-- Sidebar -->
+  <div class="w-64 border-r border-zinc-800 flex flex-col">
+
+    <div class="px-6 border-b border-zinc-800 flex items-center" style="height:73px;">
+      <div class="flex items-center gap-x-3">
+        <div class="w-9 h-9 bg-amber-500 rounded-2xl flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-shield-halved text-black text-lg"></i>
+        </div>
+        <span class="font-display text-2xl font-semibold tracking-tighter">Primora</span>
+      </div>
+    </div>
+
+    <div class="px-3 py-4 flex-1">
+      <nav class="space-y-1 text-sm">
+        <a href="overview.html" class="flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg">
+          <i class="fa-solid fa-chart-line w-4"></i><span>Overview</span>
+        </a>
+        <a href="mine.html" class="flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg">
+          <i class="fa-solid fa-microchip w-4"></i><span>Mine</span>
+        </a>
+        <a href="mymining.html" class="flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg">
+          <i class="fa-solid fa-user w-4"></i><span>My Mining</span>
+        </a>
+        <a href="stake.html" class="flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg">
+          <i class="fa-solid fa-lock w-4"></i><span>Stake</span>
+        </a>
+        <a href="exchange.html" class="flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg">
+          <i class="fa-solid fa-exchange-alt w-4"></i><span>Exchange</span>
+        </a>
+        <a href="sites.html" class="flex items-center gap-x-3 px-4 py-2.5 font-medium rounded-lg nav-active">
+          <i class="fa-solid fa-globe w-4 text-amber-400"></i><span>Sites</span>
+        </a>
+        <a href="wallet.html" class="flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg">
+          <i class="fa-solid fa-wallet w-4"></i><span>Wallet &amp; Payouts</span>
+        </a>
+        <a href="alerts.html" class="flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg">
+          <i class="fa-solid fa-bell w-4"></i><span>Alerts</span>
+          <span class="ml-auto bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">4</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-4 border-t border-zinc-800">
+      <div class="flex items-center gap-x-3">
+        <div class="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-user text-xs text-zinc-400"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium font-mono truncate">0x71C...9f3A</div>
+          <div class="flex items-center gap-x-1.5 mt-0.5">
+            <div class="w-1.5 h-1.5 bg-emerald-400 rounded-full status-dot"></div>
+            <span class="text-[10px] text-emerald-400">Connected · KYC Full</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="flex-1 flex flex-col overflow-hidden min-w-0">
+
+    <!-- Topbar -->
+    <div class="border-b border-zinc-800 px-6 flex items-center justify-between flex-shrink-0 primora-dark" style="height:73px;">
+      <div class="flex items-center gap-x-3">
+        <span class="font-display text-lg tracking-tight">Sites</span>
+        <div class="px-3 py-1 bg-zinc-900 text-xs rounded-full flex items-center gap-x-2 border border-zinc-800">
+          <div class="w-2 h-2 bg-emerald-400 rounded-full status-dot"></div>
+          <span class="text-emerald-400 text-xs font-medium">6 sites online</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-x-3">
+        <div class="px-3 py-1.5 bg-zinc-900 border border-zinc-700 rounded-2xl text-xs flex items-center gap-x-2 max-w-[280px]">
+          <i class="fa-solid fa-shield-halved text-amber-400"></i>
+          <span class="text-[10px] text-zinc-400 truncate">All mining is virtual. No real commodities.</span>
+        </div>
+        <div class="px-3 py-1 bg-zinc-900 rounded-2xl text-xs flex items-center gap-x-2">
+          <span class="text-zinc-400">KYC:</span>
+          <span class="font-medium text-emerald-400">Full</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-auto p-6">
+      <div class="max-w-6xl mx-auto space-y-5">
+
+        <!-- Page header -->
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-semibold font-display tracking-tight">Mining Sites</h1>
+            <p class="text-zinc-400 text-sm mt-0.5">Global network of mining sites powering the platform</p>
+          </div>
+          <div class="flex items-center gap-x-3 text-xs">
+            <div class="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-2xl text-zinc-400">
+              6 active sites
+            </div>
+            <div class="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-2xl text-zinc-400">
+              5,614 miners connected
+            </div>
+          </div>
+        </div>
+
+        <!-- Network summary -->
+        <div class="card rounded-3xl p-5">
+          <div class="grid grid-cols-4 gap-4 text-center">
+            <div>
+              <div class="text-[10px] font-semibold tracking-wider text-zinc-500 mb-1">TOTAL MINERS</div>
+              <div class="text-3xl font-semibold metric-value font-display">5,614</div>
+              <div class="text-xs text-emerald-400 mt-0.5">Across all sites</div>
+            </div>
+            <div class="border-l border-zinc-800">
+              <div class="text-[10px] font-semibold tracking-wider text-zinc-500 mb-1">NETWORK UPTIME</div>
+              <div class="text-3xl font-semibold metric-value font-display">99.8%</div>
+              <div class="text-xs text-zinc-400 mt-0.5">30-day average</div>
+            </div>
+            <div class="border-l border-zinc-800">
+              <div class="text-[10px] font-semibold tracking-wider text-zinc-500 mb-1">YOUR SITE</div>
+              <div class="text-3xl font-semibold metric-value font-display">JHB</div>
+              <div class="text-xs text-amber-400 mt-0.5">Johannesburg</div>
+            </div>
+            <div class="border-l border-zinc-800">
+              <div class="text-[10px] font-semibold tracking-wider text-zinc-500 mb-1">SITES ONLINE</div>
+              <div class="text-3xl font-semibold metric-value font-display text-emerald-400">6 / 6</div>
+              <div class="text-xs text-emerald-400 mt-0.5">All operational</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sites Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+          <!-- Johannesburg -->
+          <div class="card rounded-3xl p-5" style="border-color:#1f2d1f;">
+            <div class="flex items-start justify-between mb-4">
+              <div>
+                <div class="font-semibold">Johannesburg</div>
+                <div class="text-xs text-zinc-400 mt-0.5">South Africa · Gold · Platinum</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs bg-emerald-900/30 text-emerald-400 rounded-2xl font-semibold flex items-center gap-x-1.5 flex-shrink-0">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block status-dot"></span>
+                Online
+              </span>
+            </div>
+            <div class="space-y-2.5 text-sm">
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Miners</span>
+                <span class="font-mono font-semibold">1,284</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Last active</span>
+                <span class="font-mono text-emerald-400">12s ago</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Uptime (30d)</span>
+                <span class="font-mono">99.8%</span>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-zinc-800 text-[10px] text-amber-400 font-medium flex items-center gap-x-1.5">
+              <i class="fa-solid fa-circle-check text-[9px]"></i>
+              Your active mining site
+            </div>
+          </div>
+
+          <!-- Amsterdam -->
+          <div class="card rounded-3xl p-5">
+            <div class="flex items-start justify-between mb-4">
+              <div>
+                <div class="font-semibold">Amsterdam</div>
+                <div class="text-xs text-zinc-400 mt-0.5">Netherlands · Silver</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs bg-emerald-900/30 text-emerald-400 rounded-2xl font-semibold flex items-center gap-x-1.5 flex-shrink-0">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block status-dot"></span>
+                Online
+              </span>
+            </div>
+            <div class="space-y-2.5 text-sm">
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Miners</span>
+                <span class="font-mono font-semibold">1,041</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Last active</span>
+                <span class="font-mono text-emerald-400">8s ago</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Uptime (30d)</span>
+                <span class="font-mono">99.9%</span>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-zinc-800">
+              <button onclick="showToast('Switching sites coming soon')" class="text-[10px] text-zinc-400 hover:text-amber-400 transition-colors">
+                Auto-routed for this commodity →
+              </button>
+            </div>
+          </div>
+
+          <!-- Dallas -->
+          <div class="card rounded-3xl p-5">
+            <div class="flex items-start justify-between mb-4">
+              <div>
+                <div class="font-semibold">Dallas</div>
+                <div class="text-xs text-zinc-400 mt-0.5">United States · Oil</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs bg-emerald-900/30 text-emerald-400 rounded-2xl font-semibold flex items-center gap-x-1.5 flex-shrink-0">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block status-dot"></span>
+                Online
+              </span>
+            </div>
+            <div class="space-y-2.5 text-sm">
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Miners</span>
+                <span class="font-mono font-semibold">872</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Last active</span>
+                <span class="font-mono text-emerald-400">5s ago</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Uptime (30d)</span>
+                <span class="font-mono">99.4%</span>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-zinc-800">
+              <button onclick="showToast('Switching sites coming soon')" class="text-[10px] text-zinc-400 hover:text-amber-400 transition-colors">
+                Auto-routed for this commodity →
+              </button>
+            </div>
+          </div>
+
+          <!-- Toronto -->
+          <div class="card rounded-3xl p-5">
+            <div class="flex items-start justify-between mb-4">
+              <div>
+                <div class="font-semibold">Toronto</div>
+                <div class="text-xs text-zinc-400 mt-0.5">Canada · Gold</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs bg-emerald-900/30 text-emerald-400 rounded-2xl font-semibold flex items-center gap-x-1.5 flex-shrink-0">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block status-dot"></span>
+                Online
+              </span>
+            </div>
+            <div class="space-y-2.5 text-sm">
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Miners</span>
+                <span class="font-mono font-semibold">934</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Last active</span>
+                <span class="font-mono text-emerald-400">18s ago</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Uptime (30d)</span>
+                <span class="font-mono">99.7%</span>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-zinc-800">
+              <button onclick="showToast('Switching sites coming soon')" class="text-[10px] text-zinc-400 hover:text-amber-400 transition-colors">
+                Auto-routed for this commodity →
+              </button>
+            </div>
+          </div>
+
+          <!-- Warsaw -->
+          <div class="card rounded-3xl p-5">
+            <div class="flex items-start justify-between mb-4">
+              <div>
+                <div class="font-semibold">Warsaw</div>
+                <div class="text-xs text-zinc-400 mt-0.5">Poland · Silver</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs bg-emerald-900/30 text-emerald-400 rounded-2xl font-semibold flex items-center gap-x-1.5 flex-shrink-0">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block status-dot"></span>
+                Online
+              </span>
+            </div>
+            <div class="space-y-2.5 text-sm">
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Miners</span>
+                <span class="font-mono font-semibold">721</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Last active</span>
+                <span class="font-mono text-emerald-400">22s ago</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Uptime (30d)</span>
+                <span class="font-mono">99.6%</span>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-zinc-800">
+              <button onclick="showToast('Switching sites coming soon')" class="text-[10px] text-zinc-400 hover:text-amber-400 transition-colors">
+                Auto-routed for this commodity →
+              </button>
+            </div>
+          </div>
+
+          <!-- Dubai -->
+          <div class="card rounded-3xl p-5">
+            <div class="flex items-start justify-between mb-4">
+              <div>
+                <div class="font-semibold">Dubai</div>
+                <div class="text-xs text-zinc-400 mt-0.5">UAE · Oil</div>
+              </div>
+              <span class="px-2.5 py-1 text-xs bg-emerald-900/30 text-emerald-400 rounded-2xl font-semibold flex items-center gap-x-1.5 flex-shrink-0">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block status-dot"></span>
+                Online
+              </span>
+            </div>
+            <div class="space-y-2.5 text-sm">
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Miners</span>
+                <span class="font-mono font-semibold">762</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Last active</span>
+                <span class="font-mono text-emerald-400">9s ago</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Uptime (30d)</span>
+                <span class="font-mono">99.5%</span>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-zinc-800">
+              <button onclick="showToast('Switching sites coming soon')" class="text-[10px] text-zinc-400 hover:text-amber-400 transition-colors">
+                Auto-routed for this commodity →
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.documentElement.style.setProperty('--accent', '#F59E0B');
+
+  function showToast(message) {
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1a1a1a;border:1px solid #2a2a2a;padding:10px 18px;border-radius:14px;display:flex;align-items:center;gap:10px;font-size:13px;z-index:9999;';
+    t.innerHTML = '<i class="fa-solid fa-check-circle" style="color:#4ade80;"></i><span>' + message + '</span>';
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.transition = 'opacity 0.3s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2400);
+  }
+</script>
+</body>
+</html>

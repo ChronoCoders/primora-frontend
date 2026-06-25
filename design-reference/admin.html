@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Primora • Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+
+    :root { --accent: #F59E0B; }
+
+    body { font-family: 'Inter', system-ui, sans-serif; background: #0a0a0a; }
+
+    .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 600; }
+
+    .card { background: #111111; border: 1px solid #1f1f1f; }
+
+    .metric-value { font-variant-numeric: tabular-nums; }
+
+    .nav-active {
+      background: #1f1f1f;
+      color: #fff;
+      border-left: 2px solid #F59E0B;
+      padding-left: calc(1rem - 2px);
+    }
+
+    .nav-section {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: #52525b;
+      text-transform: uppercase;
+      padding: 0 1rem;
+      margin: 16px 0 6px;
+    }
+
+    .status-dot { animation: pulse 2s cubic-bezier(0.4,0,0.6,1) infinite; }
+
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+
+    .admin-tag {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(245,158,11,0.15);
+      color: #F59E0B;
+      text-transform: uppercase;
+    }
+
+    input[type=number], input[type=text], select {
+      color: #e4e4e7;
+      background: #0a0a0a;
+      outline: none;
+    }
+    input:focus, select:focus { border-color: #F59E0B !important; }
+
+    .table-row { transition: background 0.1s; }
+    .table-row:hover { background: #161616; }
+
+    .toggle-track {
+      width: 36px; height: 20px;
+      background: #3f3f46;
+      border-radius: 10px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .toggle-track.on { background: #059669; }
+    .toggle-thumb {
+      width: 14px; height: 14px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: 3px; left: 3px;
+      transition: left 0.2s;
+    }
+    .toggle-track.on .toggle-thumb { left: 19px; }
+
+    .section-content { display: none; }
+    .section-content.active { display: block; }
+
+    /* Chart canvas */
+    .chart-wrap { position: relative; width: 100%; }
+  </style>
+</head>
+<body class="text-zinc-200">
+<div class="flex h-screen overflow-hidden">
+
+  <!-- ── SIDEBAR ── -->
+  <div class="w-64 border-r border-zinc-800 flex flex-col flex-shrink-0" style="background:#0a0a0a;">
+
+    <!-- Logo -->
+    <div class="px-6 border-b border-zinc-800 flex items-center gap-x-3" style="height:73px;">
+      <div class="w-9 h-9 bg-amber-500 rounded-2xl flex items-center justify-center flex-shrink-0">
+        <i class="fa-solid fa-shield-halved text-black text-lg"></i>
+      </div>
+      <div class="min-w-0">
+        <div class="font-display text-xl tracking-tight leading-none">Primora</div>
+        <div class="text-[9px] font-bold tracking-widest text-amber-400 mt-0.5">ADMIN PANEL</div>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <div class="flex-1 overflow-auto px-3 py-3">
+
+      <div class="nav-section">Overview</div>
+      <nav class="space-y-0.5 text-sm">
+        <a href="#" onclick="showSection('overview')" class="section-link flex items-center gap-x-3 px-4 py-2.5 font-medium rounded-lg nav-active" data-section="overview">
+          <i class="fa-solid fa-gauge w-4 text-amber-400"></i><span>Overview</span>
+        </a>
+      </nav>
+
+      <div class="nav-section">Infrastructure</div>
+      <nav class="space-y-0.5 text-sm">
+        <a href="#" onclick="showSection('nodes')" class="section-link flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg" data-section="nodes">
+          <i class="fa-solid fa-server w-4"></i><span>Node Management</span>
+        </a>
+        <a href="#" onclick="showSection('oracle')" class="section-link flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg" data-section="oracle">
+          <i class="fa-solid fa-satellite-dish w-4"></i><span>Oracle Monitor</span>
+        </a>
+      </nav>
+
+      <div class="nav-section">Security</div>
+      <nav class="space-y-0.5 text-sm">
+        <a href="#" onclick="showSection('anticheat')" class="section-link flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg" data-section="anticheat">
+          <i class="fa-solid fa-shield-halved w-4"></i><span>Anti-Cheat Review</span>
+          <span class="ml-auto bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">7</span>
+        </a>
+        <a href="#" onclick="showSection('users')" class="section-link flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg" data-section="users">
+          <i class="fa-solid fa-users w-4"></i><span>User Management</span>
+        </a>
+      </nav>
+
+      <div class="nav-section">Finance</div>
+      <nav class="space-y-0.5 text-sm">
+        <a href="#" onclick="showSection('reserve')" class="section-link flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg" data-section="reserve">
+          <i class="fa-solid fa-vault w-4"></i><span>Reserve Monitor</span>
+        </a>
+        <a href="#" onclick="showSection('treasury')" class="section-link flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg" data-section="treasury">
+          <i class="fa-solid fa-coins w-4"></i><span>Treasury</span>
+        </a>
+        <a href="#" onclick="showSection('payouts')" class="section-link flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg" data-section="payouts">
+          <i class="fa-solid fa-money-bill-transfer w-4"></i><span>Payout Controls</span>
+        </a>
+      </nav>
+
+      <div class="nav-section">Protocol</div>
+      <nav class="space-y-0.5 text-sm">
+        <a href="#" onclick="showSection('mintceiling')" class="section-link flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg" data-section="mintceiling">
+          <i class="fa-solid fa-cubes w-4"></i><span>Mint Ceiling</span>
+        </a>
+        <a href="#" onclick="showSection('fees')" class="section-link flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg" data-section="fees">
+          <i class="fa-solid fa-percent w-4"></i><span>Fee Controls</span>
+        </a>
+        <a href="#" onclick="showSection('difficulty')" class="section-link flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg" data-section="difficulty">
+          <i class="fa-solid fa-sliders w-4"></i><span>Difficulty Override</span>
+        </a>
+        <a href="#" onclick="showSection('transparency')" class="section-link flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg" data-section="transparency">
+          <i class="fa-solid fa-eye w-4"></i><span>Entity Transparency</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Operator -->
+    <div class="p-4 border-t border-zinc-800">
+      <div class="flex items-center gap-x-3">
+        <div class="w-8 h-8 bg-amber-900/40 rounded-full flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-user-shield text-xs text-amber-400"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium truncate">Operator</div>
+          <div class="text-[10px] text-amber-400 font-medium">Primora Holdings Ltd</div>
+        </div>
+        <span class="admin-tag">Admin</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MAIN ── -->
+  <div class="flex-1 flex flex-col overflow-hidden min-w-0">
+
+    <!-- Topbar -->
+    <div class="border-b border-zinc-800 px-6 flex items-center justify-between flex-shrink-0" style="background:#0a0a0a; height:73px;">
+      <div class="flex items-center gap-x-3">
+        <span class="font-display text-lg tracking-tight" id="topbar-title">Overview</span>
+        <div class="px-3 py-1 bg-zinc-900 text-xs rounded-full flex items-center gap-x-2 border border-zinc-800">
+          <div class="w-2 h-2 bg-emerald-400 rounded-full status-dot"></div>
+          <span class="text-emerald-400 font-medium">Mainnet · Polygon + Ethereum</span>
+        </div>
+        <div class="px-3 py-1 bg-amber-900/20 border border-amber-900/30 text-xs rounded-full text-amber-400 font-medium">
+          Operator session
+        </div>
+      </div>
+      <div class="flex items-center gap-x-2 text-xs">
+        <div class="px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-2xl text-zinc-400">
+          UTC: <span class="text-white font-mono" id="utc-clock">00:00:00</span>
+        </div>
+        <button onclick="showToast('Emergency pause requires multi-sig confirmation')"
+          class="px-4 py-1.5 bg-red-900/30 border border-red-900/50 text-red-400 text-xs font-semibold rounded-2xl hover:bg-red-900/50 transition-colors flex items-center gap-x-2">
+          <i class="fa-solid fa-circle-stop text-xs"></i> Emergency Pause
+        </button>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-auto">
+
+      <!-- ── OVERVIEW ── -->
+      <div id="section-overview" class="section-content active p-6 space-y-5">
+
+        <!-- 6 KPI cards -->
+        <div class="grid grid-cols-6 gap-3">
+          <div class="card rounded-3xl p-4">
+            <div class="text-[9px] font-bold tracking-wider text-zinc-500">TOTAL MINERS</div>
+            <div class="text-2xl font-semibold metric-value mt-1 font-display">5,614</div>
+            <div class="text-xs text-emerald-400 mt-0.5">+128 (24h)</div>
+          </div>
+          <div class="card rounded-3xl p-4">
+            <div class="text-[9px] font-bold tracking-wider text-zinc-500">NETWORK HASHRATE</div>
+            <div class="text-2xl font-semibold metric-value mt-1 font-display">1.28M</div>
+            <div class="text-xs text-zinc-400 mt-0.5">H/s total</div>
+          </div>
+          <div class="card rounded-3xl p-4">
+            <div class="text-[9px] font-bold tracking-wider text-zinc-500">PRM CIRCULATING</div>
+            <div class="text-2xl font-semibold metric-value mt-1 font-display">4.82M</div>
+            <div class="text-xs text-amber-400 mt-0.5">≈ $27.9M USD</div>
+          </div>
+          <div class="card rounded-3xl p-4">
+            <div class="text-[9px] font-bold tracking-wider text-zinc-500">RESERVE RATIO</div>
+            <div class="text-2xl font-semibold metric-value mt-1 font-display text-emerald-400">168%</div>
+            <div class="text-xs text-emerald-400 mt-0.5">Healthy · above 150%</div>
+          </div>
+          <div class="card rounded-3xl p-4">
+            <div class="text-[9px] font-bold tracking-wider text-zinc-500">SITES ONLINE</div>
+            <div class="text-2xl font-semibold metric-value mt-1 font-display text-emerald-400">6 / 6</div>
+            <div class="text-xs text-emerald-400 mt-0.5">All operational</div>
+          </div>
+          <div class="card rounded-3xl p-4">
+            <div class="text-[9px] font-bold tracking-wider text-zinc-500">FLAGGED SESSIONS</div>
+            <div class="text-2xl font-semibold metric-value mt-1 font-display text-red-400">7</div>
+            <div class="text-xs text-red-400 mt-0.5">Needs review</div>
+          </div>
+        </div>
+
+        <!-- Revenue chart + entity mining -->
+        <div class="grid grid-cols-3 gap-4">
+          <div class="card rounded-3xl p-5 col-span-2">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <div class="font-semibold">Network Revenue</div>
+                <div class="text-xs text-zinc-500 mt-0.5">Buy + sell fees · 24h rolling</div>
+              </div>
+              <div class="text-xs text-zinc-400">Buy fees: <span class="text-white font-medium">$48,420</span> · Sell fees: <span class="text-white font-medium">$72,630</span></div>
+            </div>
+            <div class="chart-wrap" style="height:160px;">
+              <canvas id="revenueChart" role="img" aria-label="Network revenue chart over 24 hours"></canvas>
+            </div>
+          </div>
+
+          <div class="card rounded-3xl p-5">
+            <div class="font-semibold mb-4">Entity Mining</div>
+            <div class="space-y-3 text-sm">
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Entity hashrate</span>
+                <span class="font-mono font-medium">61,500 H/s</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Network share</span>
+                <span class="text-amber-400 font-medium">4.8%</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-zinc-400">PRM mined today</span>
+                <span class="font-mono font-medium">7,142 PRM</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Entity wallet</span>
+                <span class="font-mono text-xs text-amber-400">0x3f2a...8c1b</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-zinc-400">is_entity_node</span>
+                <span class="text-emerald-400 font-medium">true · 6 nodes</span>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-zinc-800">
+              <div class="text-[10px] text-zinc-500 mb-1">Weekly snapshot</div>
+              <div class="text-xs">Last emitted: <span class="text-white">Sun Jun 15, 00:00 UTC</span></div>
+              <button onclick="showToast('Manual snapshot triggered · Awaiting multi-sig')"
+                class="mt-2 w-full py-1.5 text-xs bg-zinc-800 hover:bg-zinc-700 rounded-xl transition-colors">
+                Trigger manual snapshot
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick system status -->
+        <div class="grid grid-cols-3 gap-4">
+          <div class="card rounded-3xl p-5">
+            <div class="font-semibold mb-3 text-sm">Oracle Status</div>
+            <div class="space-y-2.5 text-xs">
+              <div class="flex justify-between items-center">
+                <span class="text-zinc-400">Chainlink</span>
+                <span class="text-emerald-400 font-medium flex items-center gap-x-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block status-dot"></span>Active</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-zinc-400">Pyth Network</span>
+                <span class="text-zinc-400 font-medium">Standby</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-zinc-400">API3</span>
+                <span class="text-zinc-400 font-medium">Standby</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-zinc-400">Last divergence check</span>
+                <span class="text-white font-mono">4m ago</span>
+              </div>
+            </div>
+          </div>
+          <div class="card rounded-3xl p-5">
+            <div class="font-semibold mb-3 text-sm">Difficulty</div>
+            <div class="space-y-2.5 text-xs">
+              <div class="flex justify-between"><span class="text-zinc-400">Current</span><span class="font-mono font-medium">1.84x</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">Target hashrate</span><span class="font-mono">1,000,000 H/s</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">Actual hashrate</span><span class="font-mono">1,284,000 H/s</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">Next adjustment</span><span class="text-amber-400 font-medium">In 11 days</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">Period</span><span class="font-mono">Manual (day 24/90)</span></div>
+            </div>
+          </div>
+          <div class="card rounded-3xl p-5">
+            <div class="font-semibold mb-3 text-sm">Active Alerts</div>
+            <div class="space-y-2 text-xs">
+              <div class="flex gap-x-2 items-start"><i class="fa-solid fa-exclamation-circle text-red-400 mt-0.5 flex-shrink-0"></i><span>7 flagged mining sessions pending review</span></div>
+              <div class="flex gap-x-2 items-start"><i class="fa-solid fa-exclamation-triangle text-amber-400 mt-0.5 flex-shrink-0"></i><span>Johannesburg connectivity warning (auto-recovered)</span></div>
+              <div class="flex gap-x-2 items-start"><i class="fa-solid fa-info-circle text-blue-400 mt-0.5 flex-shrink-0"></i><span>Difficulty adjustment in 11 days</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── NODE MANAGEMENT ── -->
+      <div id="section-nodes" class="section-content p-6 space-y-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-lg font-semibold font-display">Node Management</h2>
+            <p class="text-zinc-400 text-xs mt-0.5">6 active nodes · All tagged is_entity_node = true</p>
+          </div>
+          <button onclick="showMultiSigModal('Deploy new node')"
+            class="px-4 py-2 text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-black rounded-2xl transition-colors flex items-center gap-x-2">
+            <i class="fa-solid fa-plus text-xs"></i> Deploy Node
+          </button>
+        </div>
+
+        <div class="card rounded-3xl overflow-hidden">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-zinc-800 text-[10px] font-bold tracking-wider text-zinc-500">
+                <th class="text-left px-5 py-3">Site</th>
+                <th class="text-left px-4 py-3">Country</th>
+                <th class="text-left px-4 py-3">Provider</th>
+                <th class="text-left px-4 py-3">Commodity</th>
+                <th class="text-left px-4 py-3">Miners</th>
+                <th class="text-left px-4 py-3">Last Active</th>
+                <th class="text-left px-4 py-3">Uptime</th>
+                <th class="text-left px-4 py-3">Status</th>
+                <th class="text-left px-4 py-3">Entity Node</th>
+                <th class="text-left px-4 py-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-zinc-800">
+              <tr class="table-row">
+                <td class="px-5 py-3.5 font-medium">Johannesburg</td>
+                <td class="px-4 py-3.5 text-zinc-400">South Africa</td>
+                <td class="px-4 py-3.5 text-zinc-400">Vultr</td>
+                <td class="px-4 py-3.5"><span class="text-xs px-2 py-0.5 bg-amber-900/30 text-amber-400 rounded">Gold + Platinum</span></td>
+                <td class="px-4 py-3.5 font-mono">1,284</td>
+                <td class="px-4 py-3.5 text-emerald-400 font-mono text-xs">12s ago</td>
+                <td class="px-4 py-3.5 font-mono text-xs">99.8%</td>
+                <td class="px-4 py-3.5"><span class="text-xs text-emerald-400 flex items-center gap-x-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block status-dot"></span>Online</span></td>
+                <td class="px-4 py-3.5"><span class="text-xs text-emerald-400 font-mono">true</span></td>
+                <td class="px-4 py-3.5">
+                  <div class="flex gap-x-1.5">
+                    <button onclick="showMultiSigModal('Update commodity: Johannesburg')" class="text-xs px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors">Edit</button>
+                    <button onclick="showMultiSigModal('Retire node: Johannesburg')" class="text-xs px-2.5 py-1 bg-red-600/80 hover:bg-red-600 text-red-100 rounded-lg transition-colors">Retire</button>
+                  </div>
+                </td>
+              </tr>
+              <tr class="table-row">
+                <td class="px-5 py-3.5 font-medium">Amsterdam</td>
+                <td class="px-4 py-3.5 text-zinc-400">Netherlands</td>
+                <td class="px-4 py-3.5 text-zinc-400">DigitalOcean</td>
+                <td class="px-4 py-3.5"><span class="text-xs px-2 py-0.5 bg-amber-900/30 text-amber-400 rounded">Silver</span></td>
+                <td class="px-4 py-3.5 font-mono">1,041</td>
+                <td class="px-4 py-3.5 text-emerald-400 font-mono text-xs">8s ago</td>
+                <td class="px-4 py-3.5 font-mono text-xs">99.9%</td>
+                <td class="px-4 py-3.5"><span class="text-xs text-emerald-400 flex items-center gap-x-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block status-dot"></span>Online</span></td>
+                <td class="px-4 py-3.5"><span class="text-xs text-emerald-400 font-mono">true</span></td>
+                <td class="px-4 py-3.5">
+                  <div class="flex gap-x-1.5">
+                    <button onclick="showMultiSigModal('Update commodity: Amsterdam')" class="text-xs px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors">Edit</button>
+                    <button onclick="showMultiSigModal('Retire node: Amsterdam')" class="text-xs px-2.5 py-1 bg-red-600/80 hover:bg-red-600 text-red-100 rounded-lg transition-colors">Retire</button>
+                  </div>
+                </td>
+              </tr>
+              <tr class="table-row">
+                <td class="px-5 py-3.5 font-medium">Dallas</td>
+                <td class="px-4 py-3.5 text-zinc-400">United States</td>
+                <td class="px-4 py-3.5 text-zinc-400">Akamai</td>
+                <td class="px-4 py-3.5"><span class="text-xs px-2 py-0.5 bg-amber-900/30 text-amber-400 rounded">Oil</span></td>
+                <td class="px-4 py-3.5 font-mono">872</td>
+                <td class="px-4 py-3.5 text-emerald-400 font-mono text-xs">5s ago</td>
+                <td class="px-4 py-3.5 font-mono text-xs">99.4%</td>
+                <td class="px-4 py-3.5"><span class="text-xs text-emerald-400 flex items-center gap-x-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block status-dot"></span>Online</span></td>
+                <td class="px-4 py-3.5"><span class="text-xs text-emerald-400 font-mono">true</span></td>
+                <td class="px-4 py-3.5">
+                  <div class="flex gap-x-1.5">
+                    <button onclick="showMultiSigModal('Update commodity: Dallas')" class="text-xs px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors">Edit</button>
+                    <button onclick="showMultiSigModal('Retire node: Dallas')" class="text-xs px-2.5 py-1 bg-red-600/80 hover:bg-red-600 text-red-100 rounded-lg transition-colors">Retire</button>
+                  </div>
+                </td>
+              </tr>
+              <tr class="table-row">
+                <td class="px-5 py-3.5 font-medium">Toronto</td>
+                <td class="px-4 py-3.5 text-zinc-400">Canada</td>
+                <td class="px-4 py-3.5 text-zinc-400">Vultr</td>
+                <td class="px-4 py-3.5"><span class="text-xs px-2 py-0.5 bg-amber-900/30 text-amber-400 rounded">Gold</span></td>
+                <td class="px-4 py-3.5 font-mono">934</td>
+                <td class="px-4 py-3.5 text-emerald-400 font-mono text-xs">18s ago</td>
+                <td class="px-4 py-3.5 font-mono text-xs">99.7%</td>
+                <td class="px-4 py-3.5"><span class="text-xs text-emerald-400 flex items-center gap-x-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block status-dot"></span>Online</span></td>
+                <td class="px-4 py-3.5"><span class="text-xs text-emerald-400 font-mono">true</span></td>
+                <td class="px-4 py-3.5">
+                  <div class="flex gap-x-1.5">
+                    <button onclick="showMultiSigModal('Update commodity: Toronto')" class="text-xs px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors">Edit</button>
+                    <button onclick="showMultiSigModal('Retire node: Toronto')" class="text-xs px-2.5 py-1 bg-red-600/80 hover:bg-red-600 text-red-100 rounded-lg transition-colors">Retire</button>
+                  </div>
+                </td>
+              </tr>
+              <tr class="table-row">
+                <td class="px-5 py-3.5 font-medium">Warsaw</td>
+                <td class="px-4 py-3.5 text-zinc-400">Poland</td>
+                <td class="px-4 py-3.5 text-zinc-400">Vultr</td>
+                <td class="px-4 py-3.5"><span class="text-xs px-2 py-0.5 bg-amber-900/30 text-amber-400 rounded">Silver</span></td>
+                <td class="px-4 py-3.5 font-mono">721</td>
+                <td class="px-4 py-3.5 text-emerald-400 font-mono text-xs">22s ago</td>
+                <td class="px-4 py-3.5 font-mono text-xs">99.6%</td>
+                <td class="px-4 py-3.5"><span class="text-xs text-emerald-400 flex items-center gap-x-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block status-dot"></span>Online</span></td>
+                <td class="px-4 py-3.5"><span class="text-xs text-emerald-400 font-mono">true</span></td>
+                <td class="px-4 py-3.5">
+                  <div class="flex gap-x-1.5">
+                    <button onclick="showMultiSigModal('Update commodity: Warsaw')" class="text-xs px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors">Edit</button>
+                    <button onclick="showMultiSigModal('Retire node: Warsaw')" class="text-xs px-2.5 py-1 bg-red-600/80 hover:bg-red-600 text-red-100 rounded-lg transition-colors">Retire</button>
+                  </div>
+                </td>
+              </tr>
+              <tr class="table-row">
+                <td class="px-5 py-3.5 font-medium">Dubai</td>
+                <td class="px-4 py-3.5 text-zinc-400">UAE</td>
+                <td class="px-4 py-3.5 text-zinc-400">Vultr</td>
+                <td class="px-4 py-3.5"><span class="text-xs px-2 py-0.5 bg-amber-900/30 text-amber-400 rounded">Oil</span></td>
+                <td class="px-4 py-3.5 font-mono">762</td>
+                <td class="px-4 py-3.5 text-emerald-400 font-mono text-xs">9s ago</td>
+                <td class="px-4 py-3.5 font-mono text-xs">99.5%</td>
+                <td class="px-4 py-3.5"><span class="text-xs text-emerald-400 flex items-center gap-x-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block status-dot"></span>Online</span></td>
+                <td class="px-4 py-3.5"><span class="text-xs text-emerald-400 font-mono">true</span></td>
+                <td class="px-4 py-3.5">
+                  <div class="flex gap-x-1.5">
+                    <button onclick="showMultiSigModal('Update commodity: Dubai')" class="text-xs px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors">Edit</button>
+                    <button onclick="showMultiSigModal('Retire node: Dubai')" class="text-xs px-2.5 py-1 bg-red-600/80 hover:bg-red-600 text-red-100 rounded-lg transition-colors">Retire</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card rounded-3xl p-4 flex items-center gap-x-3">
+          <i class="fa-solid fa-info-circle text-amber-400 flex-shrink-0"></i>
+          <p class="text-xs text-zinc-400">Commodity assignment changes require multi-sig (3 of 5) + 48-hour timelock. Node selection uses prev_block_hash seed -- 3-block reorg confirmation window. Rotation rule: same node excluded after 3 consecutive sessions for same wallet.</p>
+        </div>
+
+        <div class="card rounded-3xl overflow-hidden">
+          <div class="px-5 py-3 border-b border-zinc-800 font-semibold text-sm">Node Slashing History</div>
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="border-b border-zinc-800 text-[10px] font-bold tracking-wider text-zinc-500">
+                <th class="text-left px-5 py-3">Node</th>
+                <th class="text-left px-4 py-3">Violation</th>
+                <th class="text-left px-4 py-3">Penalty</th>
+                <th class="text-left px-4 py-3">Date</th>
+                <th class="text-left px-4 py-3">Stake Remaining</th>
+                <th class="text-left px-4 py-3">Tx</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-zinc-800">
+                <td class="px-5 py-3 font-mono text-zinc-400">node_004</td>
+                <td class="px-4 py-3">Downtime 2.1% in 30d</td>
+                <td class="px-4 py-3 text-amber-400">5% burn · 500 PRM</td>
+                <td class="px-4 py-3 text-zinc-400">Jun 10</td>
+                <td class="px-4 py-3 font-mono">9,500 PRM</td>
+                <td class="px-4 py-3"><a href="#" onclick="showToast('Opening explorer')" class="text-amber-400 hover:underline font-mono">0x8a3c...</a></td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3 font-mono text-zinc-400 text-zinc-600" colspan="6" style="text-align:center;color:#3f3f46;">No other slashing events</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── ORACLE MONITOR ── -->
+      <div id="section-oracle" class="section-content p-6 space-y-5">
+        <h2 class="text-lg font-semibold font-display">Oracle Monitor</h2>
+
+        <div class="grid grid-cols-3 gap-4">
+          <div class="card rounded-3xl p-5" style="border-color:#1f2d1f;">
+            <div class="flex items-center justify-between mb-3">
+              <span class="font-semibold text-sm">Chainlink</span>
+              <span class="text-xs text-emerald-400 flex items-center gap-x-1.5 font-medium"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block status-dot"></span>Primary · Active</span>
+            </div>
+            <div class="space-y-2 text-xs">
+              <div class="flex justify-between"><span class="text-zinc-400">XAU/USD</span><span class="font-mono font-medium">$3,204.00</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">XAG/USD</span><span class="font-mono font-medium">$31.80</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">XPT/USD</span><span class="font-mono font-medium">$981.00</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">WTI/USD</span><span class="font-mono font-medium">$73.40</span></div>
+              <div class="flex justify-between border-t border-zinc-800 pt-2 mt-2"><span class="text-zinc-400">Last update</span><span class="text-emerald-400 font-mono">4m ago</span></div>
+            </div>
+          </div>
+          <div class="card rounded-3xl p-5">
+            <div class="flex items-center justify-between mb-3">
+              <span class="font-semibold text-sm">Pyth Network</span>
+              <span class="text-xs text-zinc-400 font-medium">Standby</span>
+            </div>
+            <div class="space-y-2 text-xs">
+              <div class="flex justify-between"><span class="text-zinc-400">XAU/USD</span><span class="font-mono">$3,203.50</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">XAG/USD</span><span class="font-mono">$31.78</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">XPT/USD</span><span class="font-mono">$980.50</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">WTI/USD</span><span class="font-mono">$73.38</span></div>
+              <div class="flex justify-between border-t border-zinc-800 pt-2 mt-2"><span class="text-zinc-400">Divergence vs CL</span><span class="text-emerald-400 font-mono">&lt; 0.1%</span></div>
+            </div>
+          </div>
+          <div class="card rounded-3xl p-5">
+            <div class="flex items-center justify-between mb-3">
+              <span class="font-semibold text-sm">API3</span>
+              <span class="text-xs text-zinc-400 font-medium">Standby</span>
+            </div>
+            <div class="space-y-2 text-xs">
+              <div class="flex justify-between"><span class="text-zinc-400">XAU/USD</span><span class="font-mono">$3,205.00</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">XAG/USD</span><span class="font-mono">$31.82</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">XPT/USD</span><span class="font-mono">$981.50</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">WTI/USD</span><span class="font-mono">$73.42</span></div>
+              <div class="flex justify-between border-t border-zinc-800 pt-2 mt-2"><span class="text-zinc-400">Divergence vs CL</span><span class="text-emerald-400 font-mono">&lt; 0.1%</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card rounded-3xl p-5">
+          <div class="font-semibold mb-4 text-sm">Fallback Rules</div>
+          <div class="grid grid-cols-2 gap-4 text-xs">
+            <div class="space-y-2">
+              <div class="flex justify-between"><span class="text-zinc-400">Divergence threshold</span><span class="font-mono">2% between CL + Pyth</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">Fallback order</span><span class="font-mono">Chainlink → Pyth → API3</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">All-fail action</span><span class="text-red-400 font-medium">Pause all payouts</span></div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex justify-between"><span class="text-zinc-400">Current active</span><span class="text-emerald-400 font-medium">Chainlink</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">Failovers (30d)</span><span class="font-mono">0</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">Operator alert</span><span class="text-emerald-400 font-medium">Configured</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ANTI-CHEAT REVIEW ── -->
+      <div id="section-anticheat" class="section-content p-6 space-y-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-lg font-semibold font-display">Anti-Cheat Review</h2>
+            <p class="text-zinc-400 text-xs mt-0.5">7 flagged sessions · CPU whitelist managed below</p>
+          </div>
+          <button onclick="showMultiSigModal('Update CPU whitelist')"
+            class="px-4 py-2 text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-2xl transition-colors flex items-center gap-x-2">
+            <i class="fa-solid fa-list-check text-xs"></i> Manage CPU Whitelist
+          </button>
+        </div>
+
+        <div class="card rounded-3xl overflow-hidden">
+          <div class="px-5 py-3 border-b border-zinc-800 text-[10px] font-bold tracking-wider text-zinc-500 grid grid-cols-7 gap-4">
+            <span>Wallet</span><span>Session ID</span><span>Score</span><span>Flag</span><span>Top Signal</span><span>Time</span><span>Action</span>
+          </div>
+          <div class="divide-y divide-zinc-800">
+            <!-- Row 1 -->
+            <div class="table-row px-5 py-3.5 grid grid-cols-7 gap-4 items-center text-xs">
+              <span class="font-mono text-zinc-300">0x4f8a...2c1d</span>
+              <span class="font-mono text-zinc-500">sess_8841</span>
+              <span class="font-mono font-bold text-red-400">74</span>
+              <span class="px-2 py-0.5 bg-red-900/30 text-red-400 rounded text-[10px] font-bold w-fit">Flag 3</span>
+              <span class="text-zinc-400">SolveTime 81%</span>
+              <span class="text-zinc-500">2h ago</span>
+              <div class="flex gap-x-1.5">
+                <button onclick="showToast('Session suspended')" class="px-2.5 py-1 bg-red-600/80 text-red-100 hover:bg-red-600 rounded-lg transition-colors">Suspend</button>
+                <button onclick="showToast('Appeal opened')" class="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors text-zinc-300">Appeal</button>
+              </div>
+            </div>
+            <!-- Row 2 -->
+            <div class="table-row px-5 py-3.5 grid grid-cols-7 gap-4 items-center text-xs">
+              <span class="font-mono text-zinc-300">0x9b2c...7e4f</span>
+              <span class="font-mono text-zinc-500">sess_8839</span>
+              <span class="font-mono font-bold text-red-400">68</span>
+              <span class="px-2 py-0.5 bg-amber-900/30 text-amber-400 rounded text-[10px] font-bold w-fit">Flag 2</span>
+              <span class="text-zinc-400">MemoryPattern 72%</span>
+              <span class="text-zinc-500">3h ago</span>
+              <div class="flex gap-x-1.5">
+                <button onclick="showToast('Rate-limited to 50% reward')" class="px-2.5 py-1 bg-amber-900/30 text-amber-400 hover:bg-amber-900/50 rounded-lg transition-colors">Rate-limit</button>
+                <button onclick="showToast('Session cleared')" class="px-2.5 py-1 bg-emerald-900/30 text-emerald-400 hover:bg-emerald-900/50 rounded-lg transition-colors">Clear</button>
+              </div>
+            </div>
+            <!-- Row 3 -->
+            <div class="table-row px-5 py-3.5 grid grid-cols-7 gap-4 items-center text-xs">
+              <span class="font-mono text-zinc-300">0x1a7d...5b2e</span>
+              <span class="font-mono text-zinc-500">sess_8837</span>
+              <span class="font-mono font-bold text-red-400">71</span>
+              <span class="px-2 py-0.5 bg-red-900/30 text-red-400 rounded text-[10px] font-bold w-fit">Flag 3</span>
+              <span class="text-zinc-400">SolveTime 78%</span>
+              <span class="text-zinc-500">4h ago</span>
+              <div class="flex gap-x-1.5">
+                <button onclick="showToast('Session suspended')" class="px-2.5 py-1 bg-red-600/80 text-red-100 hover:bg-red-600 rounded-lg transition-colors">Suspend</button>
+                <button onclick="showToast('Appeal opened')" class="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors text-zinc-300">Appeal</button>
+              </div>
+            </div>
+            <!-- Row 4 (new) -->
+            <div class="table-row px-5 py-3.5 grid grid-cols-7 gap-4 items-center text-xs">
+              <span class="font-mono text-zinc-300">0x6c2e...9f1a</span>
+              <span class="font-mono text-zinc-500">sess_8845</span>
+              <span class="font-mono font-bold text-red-400">65</span>
+              <span class="px-2 py-0.5 bg-amber-900/30 text-amber-400 rounded text-[10px] font-bold w-fit">Flag 2</span>
+              <span class="text-zinc-400">HashrateConsistency 68%</span>
+              <span class="text-zinc-500">5h ago</span>
+              <div class="flex gap-x-1.5">
+                <button onclick="showToast('Rate-limited to 50% reward')" class="px-2.5 py-1 bg-amber-900/30 text-amber-400 hover:bg-amber-900/50 rounded-lg transition-colors">Rate-limit</button>
+                <button onclick="showToast('Session cleared')" class="px-2.5 py-1 bg-emerald-900/30 text-emerald-400 hover:bg-emerald-900/50 rounded-lg transition-colors">Clear</button>
+              </div>
+            </div>
+            <!-- Row 5 (new) -->
+            <div class="table-row px-5 py-3.5 grid grid-cols-7 gap-4 items-center text-xs">
+              <span class="font-mono text-zinc-300">0x2d9f...4b7c</span>
+              <span class="font-mono text-zinc-500">sess_8848</span>
+              <span class="font-mono font-bold text-red-400">82</span>
+              <span class="px-2 py-0.5 bg-red-900/30 text-red-400 rounded text-[10px] font-bold w-fit">Flag 3</span>
+              <span class="text-zinc-400">CrossSession 91%</span>
+              <span class="text-zinc-500">6h ago</span>
+              <div class="flex gap-x-1.5">
+                <button onclick="showToast('Session suspended')" class="px-2.5 py-1 bg-red-600/80 text-red-100 hover:bg-red-600 rounded-lg transition-colors">Suspend</button>
+                <button onclick="showToast('Appeal opened')" class="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors text-zinc-300">Appeal</button>
+              </div>
+            </div>
+          </div>
+          <div class="px-5 py-3 border-t border-zinc-800 text-xs text-zinc-500 flex justify-between">
+            <span>Showing 5 of 7 flagged sessions</span>
+            <button onclick="showToast('Loading more flagged sessions...')" class="text-amber-400 hover:underline">Load more</button>
+          </div>
+        </div>
+
+        <div class="card rounded-3xl p-5">
+          <div class="font-semibold mb-4 text-sm">Detection Thresholds</div>
+          <div class="grid grid-cols-4 gap-4 text-xs">
+            <div><div class="text-zinc-400 mb-1">Flag 1 threshold</div><div class="font-mono font-medium">Score 31-50 · Log only</div></div>
+            <div><div class="text-zinc-400 mb-1">Flag 2 threshold</div><div class="font-mono font-medium">Score 51-70 · Rate-limit 50%</div></div>
+            <div><div class="text-zinc-400 mb-1">Flag 3 threshold</div><div class="font-mono font-medium">Score 71-100 · Suspend</div></div>
+            <div><div class="text-zinc-400 mb-1">False positive rate</div><div class="font-mono text-emerald-400 font-medium">&lt; 0.1%</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── USER MANAGEMENT ── -->
+      <div id="section-users" class="section-content p-6 space-y-5">
+        <h2 class="text-lg font-semibold font-display">User Management</h2>
+
+        <div class="flex items-center gap-x-3 mb-4">
+          <div class="relative">
+            <i class="fa-solid fa-search absolute left-3 top-2.5 text-zinc-500 text-xs"></i>
+            <input type="text" placeholder="Search by wallet or address..."
+              class="pl-8 pr-4 py-2 bg-zinc-900 border border-zinc-700 rounded-2xl text-xs w-72 focus:border-amber-500">
+          </div>
+          <select class="px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-2xl text-xs">
+            <option>All KYC tiers</option>
+            <option>None</option>
+            <option>Basic</option>
+            <option>Full</option>
+          </select>
+          <select class="px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-2xl text-xs">
+            <option>All statuses</option>
+            <option>Active</option>
+            <option>Flagged</option>
+            <option>Restricted</option>
+          </select>
+        </div>
+
+        <div class="card rounded-3xl overflow-hidden">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="border-b border-zinc-800 text-[10px] font-bold tracking-wider text-zinc-500">
+                <th class="text-left px-5 py-3">Wallet</th>
+                <th class="text-left px-4 py-3">KYC Tier</th>
+                <th class="text-left px-4 py-3">PRM Mined</th>
+                <th class="text-left px-4 py-3">Staked</th>
+                <th class="text-left px-4 py-3">Joined</th>
+                <th class="text-left px-4 py-3">Status</th>
+                <th class="text-left px-4 py-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-zinc-800">
+              <tr class="table-row">
+                <td class="px-5 py-3 font-mono">0x71C...9f3A</td>
+                <td class="px-4 py-3"><span class="px-2 py-0.5 bg-emerald-900/20 text-emerald-400 rounded text-[10px] font-bold">Full</span></td>
+                <td class="px-4 py-3 font-mono">4,872 PRM</td>
+                <td class="px-4 py-3 font-mono">18,450 PRM</td>
+                <td class="px-4 py-3 text-zinc-400">Jan 12, 2026</td>
+                <td class="px-4 py-3"><span class="text-emerald-400">Active</span></td>
+                <td class="px-4 py-3">
+                  <div class="flex gap-x-1.5">
+                    <button onclick="showToast('User details opened')" class="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors">View</button>
+                    <button onclick="showToast('Restriction requires confirmation')" class="px-2.5 py-1 bg-red-600/80 text-red-100 hover:bg-red-600 rounded-lg transition-colors">Restrict</button>
+                  </div>
+                </td>
+              </tr>
+              <tr class="table-row">
+                <td class="px-5 py-3 font-mono">0x4f8a...2c1d</td>
+                <td class="px-4 py-3"><span class="px-2 py-0.5 bg-zinc-800 text-zinc-400 rounded text-[10px] font-bold">None</span></td>
+                <td class="px-4 py-3 font-mono">842 PRM</td>
+                <td class="px-4 py-3 font-mono">0 PRM</td>
+                <td class="px-4 py-3 text-zinc-400">Feb 18, 2026</td>
+                <td class="px-4 py-3"><span class="text-red-400">Flagged</span></td>
+                <td class="px-4 py-3">
+                  <div class="flex gap-x-1.5">
+                    <button onclick="showToast('User details opened')" class="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors">View</button>
+                    <button onclick="showToast('Session banned')" class="px-2.5 py-1 bg-red-600/80 text-red-100 hover:bg-red-600 rounded-lg transition-colors">Ban</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── RESERVE MONITOR ── -->
+      <div id="section-reserve" class="section-content p-6 space-y-5">
+        <h2 class="text-lg font-semibold font-display">Reserve Monitor</h2>
+
+        <div class="grid grid-cols-4 gap-4">
+          <div class="card rounded-3xl p-5" style="border-color:#1f2d1f;">
+            <div class="text-[9px] font-bold tracking-wider text-zinc-500">RESERVE RATIO</div>
+            <div class="text-4xl font-semibold font-display text-emerald-400 mt-2 metric-value">168%</div>
+            <div class="text-xs text-emerald-400 mt-1">Healthy · Above 150%</div>
+          </div>
+          <div class="card rounded-3xl p-5">
+            <div class="text-[9px] font-bold tracking-wider text-zinc-500">USDC HELD</div>
+            <div class="text-4xl font-semibold font-display mt-2 metric-value">$1.84M</div>
+            <div class="text-xs text-zinc-400 mt-1">In Treasury.sol</div>
+          </div>
+          <div class="card rounded-3xl p-5">
+            <div class="text-[9px] font-bold tracking-wider text-zinc-500">USDT HELD</div>
+            <div class="text-4xl font-semibold font-display mt-2 metric-value">$920K</div>
+            <div class="text-xs text-zinc-400 mt-1">In Treasury.sol</div>
+          </div>
+          <div class="card rounded-3xl p-5">
+            <div class="text-[9px] font-bold tracking-wider text-zinc-500">30D OBLIGATIONS</div>
+            <div class="text-4xl font-semibold font-display mt-2 metric-value">$1.64M</div>
+            <div class="text-xs text-zinc-400 mt-1">7-day trailing avg</div>
+          </div>
+        </div>
+
+        <div class="card rounded-3xl p-5">
+          <div class="font-semibold mb-4 text-sm">Threshold Levels</div>
+          <div class="space-y-3">
+            <div class="flex items-center gap-x-4">
+              <div class="w-24 text-xs text-zinc-400">Above 150%</div>
+              <div class="flex-1 bg-zinc-800 h-2 rounded-full overflow-hidden">
+                <div class="h-2 bg-emerald-400 rounded-full" style="width:100%"></div>
+              </div>
+              <div class="text-xs text-emerald-400 font-medium w-24">Healthy · Current</div>
+            </div>
+            <div class="flex items-center gap-x-4">
+              <div class="w-24 text-xs text-zinc-400">120% - 150%</div>
+              <div class="flex-1 bg-zinc-800 h-2 rounded-full overflow-hidden">
+                <div class="h-2 bg-amber-400 rounded-full" style="width:80%"></div>
+              </div>
+              <div class="text-xs text-amber-400 font-medium w-24">Caution · Alert only</div>
+            </div>
+            <div class="flex items-center gap-x-4">
+              <div class="w-24 text-xs text-zinc-400">100% - 120%</div>
+              <div class="flex-1 bg-zinc-800 h-2 rounded-full overflow-hidden">
+                <div class="h-2 bg-orange-400 rounded-full" style="width:67%"></div>
+              </div>
+              <div class="text-xs text-orange-400 font-medium w-24">Warning · Pause stake</div>
+            </div>
+            <div class="flex items-center gap-x-4">
+              <div class="w-24 text-xs text-zinc-400">Below 100%</div>
+              <div class="flex-1 bg-zinc-800 h-2 rounded-full overflow-hidden">
+                <div class="h-2 bg-red-400 rounded-full" style="width:40%"></div>
+              </div>
+              <div class="text-xs text-red-400 font-medium w-24">Critical · Pause all</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card rounded-3xl p-5">
+          <div class="font-semibold mb-4 text-sm">Stress Test Status</div>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-zinc-400">1,000 users on Gold · commodity -30%</span>
+              <span class="text-emerald-400 font-semibold flex items-center gap-1"><i class="fa-solid fa-check-circle text-[10px]"></i>Passed</span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-zinc-400">5,000 users at daily cap simultaneous payout</span>
+              <span class="text-emerald-400 font-semibold flex items-center gap-1"><i class="fa-solid fa-check-circle text-[10px]"></i>Passed</span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-zinc-400">Oracle failure 4h pause + surge demand</span>
+              <span class="text-emerald-400 font-semibold flex items-center gap-1"><i class="fa-solid fa-check-circle text-[10px]"></i>Passed</span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-zinc-400">PRM price -50% · sell pressure on treasury</span>
+              <span class="text-amber-400 font-semibold flex items-center gap-1"><i class="fa-solid fa-clock text-[10px]"></i>Pending</span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-zinc-400">Coordinated large-group PRM sell + payout</span>
+              <span class="text-amber-400 font-semibold flex items-center gap-1"><i class="fa-solid fa-clock text-[10px]"></i>Pending</span>
+            </div>
+          </div>
+          <div class="mt-3 text-xs text-zinc-600">All 5 scenarios must pass before user access opens. Hard launch gate.</div>
+        </div>
+
+        <div class="card rounded-3xl p-5">
+          <div class="font-semibold mb-3 text-sm">Projected 30-Day Obligations Formula</div>
+          <div class="bg-zinc-900 rounded-2xl p-4 font-mono text-xs text-zinc-300 leading-relaxed">
+            Projected_30d = (Avg7d_Staked_Polygon × Avg7d_Daily_Rate × 30<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ Avg7d_Staked_ETH × Avg7d_Weekly_Rate × 4)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;× Current_PRM_Price_USD<br>
+            <br>
+            Reserve_Ratio = Total_USDC_USDT / Projected_30d_Obligations
+          </div>
+          <div class="text-xs text-zinc-500 mt-2">Recalculated daily at 00:00 UTC. Same formula used by Treasury.sol on-chain.</div>
+        </div>
+      </div>
+
+      <!-- ── TREASURY ── -->
+      <div id="section-treasury" class="section-content p-6 space-y-5">
+        <h2 class="text-lg font-semibold font-display">Treasury</h2>
+
+        <div class="grid grid-cols-3 gap-4">
+          <div class="card rounded-3xl p-5">
+            <div class="text-[9px] font-bold tracking-wider text-zinc-500">ENTITY PRM BALANCE</div>
+            <div class="text-3xl font-semibold font-display mt-2 metric-value text-amber-400">284,420 PRM</div>
+            <div class="text-xs text-zinc-400 mt-1">≈ $1.65M at current price</div>
+          </div>
+          <div class="card rounded-3xl p-5">
+            <div class="text-[9px] font-bold tracking-wider text-zinc-500">FEE REVENUE (30D)</div>
+            <div class="text-3xl font-semibold font-display mt-2 metric-value">$284,100</div>
+            <div class="text-xs text-zinc-400 mt-1">Buy: $112K · Sell: $172K</div>
+          </div>
+          <div class="card rounded-3xl p-5">
+            <div class="text-[9px] font-bold tracking-wider text-zinc-500">REWARD POOL</div>
+            <div class="text-3xl font-semibold font-display mt-2 metric-value">$56,820</div>
+            <div class="text-xs text-zinc-400 mt-1">20% of fee revenue</div>
+          </div>
+        </div>
+
+        <div class="card rounded-3xl p-5">
+          <div class="font-semibold mb-4 text-sm">Fee Allocation</div>
+          <div class="grid grid-cols-3 gap-4 text-sm">
+            <div class="bg-zinc-900 rounded-2xl p-4">
+              <div class="text-xs text-zinc-400 mb-1">Operations (50%)</div>
+              <div class="text-xl font-semibold font-mono">$142,050</div>
+              <div class="text-xs text-zinc-500 mt-1">Entity operating expenses</div>
+            </div>
+            <div class="bg-zinc-900 rounded-2xl p-4">
+              <div class="text-xs text-zinc-400 mb-1">Reserve Buffer (30%)</div>
+              <div class="text-xl font-semibold font-mono">$85,230</div>
+              <div class="text-xs text-zinc-500 mt-1">Payout stability</div>
+            </div>
+            <div class="bg-zinc-900 rounded-2xl p-4">
+              <div class="text-xs text-zinc-400 mb-1">Reward Pool (20%)</div>
+              <div class="text-xl font-semibold font-mono">$56,820</div>
+              <div class="text-xs text-zinc-500 mt-1">Long-term stakers + referrals</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PAYOUT CONTROLS ── -->
+      <div id="section-payouts" class="section-content p-6 space-y-5">
+        <h2 class="text-lg font-semibold font-display">Payout Controls</h2>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="card rounded-3xl p-5">
+            <div class="font-semibold mb-4 text-sm">Polygon Payouts (Daily)</div>
+            <div class="space-y-3 text-sm mb-4">
+              <div class="flex justify-between"><span class="text-zinc-400">Next scheduled</span><span class="font-medium">Tomorrow · 00:00 UTC</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">Estimated amount</span><span class="font-mono font-medium">84.2 USDC</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">Active stakers</span><span class="font-mono">3,214</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">Status</span><span class="text-emerald-400 font-medium">Running normally</span></div>
+            </div>
+            <div class="flex gap-x-2">
+              <button onclick="showMultiSigModal('Pause Polygon payouts')"
+                class="flex-1 py-2 text-xs font-semibold bg-red-600/80 text-red-100 hover:bg-red-600 rounded-2xl transition-colors">
+                Pause Payouts
+              </button>
+              <button onclick="showToast('Manual payout triggered · Awaiting multi-sig')"
+                class="flex-1 py-2 text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-colors">
+                Trigger Manual
+              </button>
+            </div>
+          </div>
+
+          <div class="card rounded-3xl p-5">
+            <div class="font-semibold mb-4 text-sm">Ethereum Payouts (Weekly)</div>
+            <div class="space-y-3 text-sm mb-4">
+              <div class="flex justify-between"><span class="text-zinc-400">Next scheduled</span><span class="font-medium">Sunday · 00:00 UTC</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">Estimated amount</span><span class="font-mono font-medium">58.6 USDC</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">Active stakers</span><span class="font-mono">891</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">Status</span><span class="text-emerald-400 font-medium">Running normally</span></div>
+            </div>
+            <div class="flex gap-x-2">
+              <button onclick="showMultiSigModal('Pause Ethereum payouts')"
+                class="flex-1 py-2 text-xs font-semibold bg-red-600/80 text-red-100 hover:bg-red-600 rounded-2xl transition-colors">
+                Pause Payouts
+              </button>
+              <button onclick="showToast('Manual payout triggered · Awaiting multi-sig')"
+                class="flex-1 py-2 text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-colors">
+                Trigger Manual
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card rounded-3xl p-4 flex items-center gap-x-3">
+          <i class="fa-solid fa-triangle-exclamation text-amber-400 flex-shrink-0"></i>
+          <p class="text-xs text-zinc-400">Pausing payouts requires multi-sig (3 of 5). Emergency pause via the topbar button is immediate and does not require timelock.</p>
+        </div>
+      </div>
+
+
+      <!-- ── MINT CEILING ── -->
+      <div id="section-mintceiling" class="section-content p-6 space-y-5">
+        <h2 class="text-lg font-semibold font-display">Mint Ceiling</h2>
+        <div class="card rounded-3xl p-5">
+          <div class="font-semibold mb-4 text-sm">Per-Block PRM Mint Ceiling</div>
+          <div class="grid grid-cols-3 gap-4 text-sm mb-5">
+            <div>
+              <div class="text-[9px] font-bold tracking-wider text-zinc-500 mb-1">CURRENT CEILING</div>
+              <div class="text-2xl font-semibold font-display" style="font-variant-numeric:tabular-nums;">208</div>
+              <div class="text-xs text-zinc-400 mt-1">PRM per block</div>
+            </div>
+            <div>
+              <div class="text-[9px] font-bold tracking-wider text-zinc-500 mb-1">ACTIVE USERS</div>
+              <div class="text-2xl font-semibold font-display" style="font-variant-numeric:tabular-nums;">1,000</div>
+              <div class="text-xs text-zinc-400 mt-1">Daily average</div>
+            </div>
+            <div>
+              <div class="text-[9px] font-bold tracking-wider text-zinc-500 mb-1">LAST UPDATED</div>
+              <div class="text-lg font-semibold font-display">Jun 22, 00:00</div>
+              <div class="text-xs text-zinc-400 mt-1">UTC · Pending: None</div>
+            </div>
+          </div>
+          <div class="bg-zinc-900 rounded-2xl p-4 font-mono text-xs text-zinc-300 leading-relaxed mb-4">
+            Daily_Target_Mint = active_users × avg_daily_PRM_per_user<br>
+            Block_Ceiling = (Daily_Target_Mint / blocks_per_day) × 3<br>
+            <br>
+            Current: (1,000 × 500) / 7,200 × 3 = 208 PRM/block
+          </div>
+          <div class="text-xs text-zinc-500 mb-4">Updates require 3-of-5 multi-sig + 48-hour timelock. Calculated by Rust backend daily.</div>
+          <button onclick="showMultiSigModal('Update mint ceiling')"
+            class="px-5 py-2 text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-black rounded-2xl transition-colors">
+            Propose Ceiling Update
+          </button>
+        </div>
+
+        <div class="card rounded-3xl p-5">
+          <div class="font-semibold mb-4 text-sm">Recent Updates</div>
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="border-b border-zinc-800 text-[10px] font-bold tracking-wider text-zinc-500">
+                <th class="text-left pb-2">Date</th>
+                <th class="text-left pb-2">Ceiling (PRM/block)</th>
+                <th class="text-left pb-2">Active Users</th>
+                <th class="text-left pb-2">Proposed By</th>
+                <th class="text-left pb-2">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-zinc-800">
+              <tr><td class="py-2">Jun 22</td><td class="py-2 font-mono">208</td><td class="py-2">1,000</td><td class="py-2 font-mono text-zinc-400">Rust backend</td><td class="py-2 text-emerald-400">Active</td></tr>
+              <tr><td class="py-2">Jun 21</td><td class="py-2 font-mono">194</td><td class="py-2">932</td><td class="py-2 font-mono text-zinc-400">Rust backend</td><td class="py-2 text-zinc-500">Replaced</td></tr>
+              <tr><td class="py-2">Jun 20</td><td class="py-2 font-mono">180</td><td class="py-2">865</td><td class="py-2 font-mono text-zinc-400">Rust backend</td><td class="py-2 text-zinc-500">Replaced</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+
+      <!-- ── FEE CONTROLS ── -->
+      <div id="section-fees" class="section-content p-6 space-y-5">
+        <h2 class="text-lg font-semibold font-display">Fee Controls</h2>
+
+        <div class="card rounded-3xl p-5">
+          <div class="font-semibold mb-5 text-sm">PRM Exchange Fees</div>
+          <div class="grid grid-cols-2 gap-8">
+            <div>
+              <div class="text-xs text-zinc-400 mb-2">Buy spread (PRM purchase)</div>
+              <div class="flex items-center gap-x-3 mb-1">
+                <input type="number" value="1.5" min="1" max="10"
+                  class="w-20 bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-center text-sm font-mono">
+                <span class="text-sm text-zinc-400">%</span>
+                <span class="text-xs text-zinc-500">Contract min: 10% · max: 25%</span>
+              </div>
+              <div class="text-xs text-zinc-500 mt-1">Current: 2% · Entry fee funds operations and reserve</div>
+            </div>
+            <div>
+              <div class="text-xs text-zinc-400 mb-2">Sell spread (PRM sale)</div>
+              <div class="flex items-center gap-x-3 mb-1">
+                <input type="number" value="2.5" min="1" max="10"
+                  class="w-20 bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-center text-sm font-mono">
+                <span class="text-sm text-zinc-400">%</span>
+                <span class="text-xs text-zinc-500">Contract min: 10% · max: 25%</span>
+              </div>
+              <div class="text-xs text-zinc-500 mt-1">Current: 3% · Exit fee discourages rapid cycling</div>
+            </div>
+          </div>
+          <div class="mt-5 pt-4 border-t border-zinc-800 flex items-center gap-x-3">
+            <button onclick="showMultiSigModal('Update fee parameters')"
+              class="px-5 py-2 text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-black rounded-2xl transition-colors">
+              Submit via Multi-Sig
+            </button>
+            <span class="text-xs text-zinc-500">48-hour timelock will apply before change takes effect</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── DIFFICULTY OVERRIDE ── -->
+      <div id="section-difficulty" class="section-content p-6 space-y-5">
+        <h2 class="text-lg font-semibold font-display">Difficulty Override</h2>
+
+        <div class="card rounded-3xl p-5">
+          <div class="grid grid-cols-2 gap-8">
+            <div class="space-y-3 text-sm">
+              <div class="flex justify-between"><span class="text-zinc-400">Current difficulty</span><span class="font-mono font-medium">1.84x</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">Target hashrate</span><span class="font-mono">1,000,000 H/s</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">Actual hashrate</span><span class="font-mono">1,284,000 H/s</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">Variance</span><span class="text-amber-400 font-medium">+28.4% above target</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">Next auto-adjustment</span><span class="font-medium">In 11 days</span></div>
+              <div class="flex justify-between"><span class="text-zinc-400">Authority period</span><span class="font-medium">Manual (day 24/90)</span></div>
+            </div>
+            <div>
+              <div class="text-xs text-zinc-400 mb-2">Emergency difficulty override</div>
+              <div class="flex items-center gap-x-3 mb-3">
+                <input type="number" value="1.84" step="0.01" min="0.1" max="10"
+                  class="w-28 bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-2 text-sm font-mono">
+                <span class="text-sm text-zinc-400">× multiplier</span>
+              </div>
+              <div class="text-xs text-zinc-500 mb-4">New_Difficulty = Old_Difficulty × (Actual / Target)</div>
+              <button onclick="showMultiSigModal('Emergency difficulty override')"
+                class="px-5 py-2 text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-black rounded-2xl transition-colors">
+                Submit via Multi-Sig
+              </button>
+              <div class="text-xs text-zinc-500 mt-2">48-hour timelock applies</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card rounded-3xl p-4 flex items-center gap-x-3">
+          <i class="fa-solid fa-info-circle text-amber-400 flex-shrink-0"></i>
+          <p class="text-xs text-zinc-400">After 90-day manual period, difficulty adjusts automatically every 2 weeks. Multi-sig override is retained permanently as a safety mechanism.</p>
+        </div>
+      </div>
+
+      <!-- ── ENTITY TRANSPARENCY ── -->
+      <div id="section-transparency" class="section-content p-6 space-y-5">
+        <h2 class="text-lg font-semibold font-display">Entity Transparency</h2>
+
+        <div class="grid grid-cols-3 gap-4">
+          <div class="card rounded-3xl p-5">
+            <div class="text-[9px] font-bold tracking-wider text-zinc-500">ENTITY WALLET</div>
+            <div class="font-mono text-sm font-medium mt-2 text-amber-400">0x3f2a...8c1b</div>
+            <div class="text-xs text-zinc-500 mt-1">Published in Terms of Service</div>
+          </div>
+          <div class="card rounded-3xl p-5">
+            <div class="text-[9px] font-bold tracking-wider text-zinc-500">THIS WEEK SHARE</div>
+            <div class="text-3xl font-semibold font-display mt-2 metric-value">4.8%</div>
+            <div class="text-xs text-zinc-400 mt-1">of total network hashrate</div>
+          </div>
+          <div class="card rounded-3xl p-5">
+            <div class="text-[9px] font-bold tracking-wider text-zinc-500">SNAPSHOTS EMITTED</div>
+            <div class="text-3xl font-semibold font-display mt-2 metric-value">24</div>
+            <div class="text-xs text-zinc-400 mt-1">Since launch · 0 missed</div>
+          </div>
+        </div>
+
+        <div class="card rounded-3xl overflow-hidden">
+          <div class="px-5 py-3 border-b border-zinc-800 flex items-center justify-between">
+            <span class="font-semibold text-sm">Weekly EntityMiningSnapshot History</span>
+            <span class="text-xs text-zinc-500">On-chain events · Polygon Etherscan</span>
+          </div>
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="border-b border-zinc-800 text-[10px] font-bold tracking-wider text-zinc-500">
+                <th class="text-left px-5 py-3">Week</th>
+                <th class="text-left px-4 py-3">Entity PRM Mined</th>
+                <th class="text-left px-4 py-3">Total Network PRM</th>
+                <th class="text-left px-4 py-3">Entity Share</th>
+                <th class="text-left px-4 py-3">Emitted</th>
+                <th class="text-left px-4 py-3">Status</th>
+                <th class="text-left px-4 py-3">Tx Hash</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-zinc-800">
+              <tr class="table-row">
+                <td class="px-5 py-3">Week 24</td>
+                <td class="px-4 py-3 font-mono">49,994 PRM</td>
+                <td class="px-4 py-3 font-mono">1,041,542 PRM</td>
+                <td class="px-4 py-3 text-amber-400 font-medium">4.8%</td>
+                <td class="px-4 py-3 text-zinc-400">Jun 15, 00:00 UTC</td>
+                <td class="px-4 py-3"><span class="text-emerald-400">Success</span></td>
+                <td class="px-4 py-3"><a href="#" onclick="showToast('Opening Etherscan')" class="text-amber-400 hover:underline font-mono">0x9c4b...</a></td>
+              </tr>
+              <tr class="table-row">
+                <td class="px-5 py-3">Week 23</td>
+                <td class="px-4 py-3 font-mono">48,210 PRM</td>
+                <td class="px-4 py-3 font-mono">1,004,375 PRM</td>
+                <td class="px-4 py-3 text-amber-400 font-medium">4.8%</td>
+                <td class="px-4 py-3 text-zinc-400">Jun 8, 00:00 UTC</td>
+                <td class="px-4 py-3"><span class="text-emerald-400">Success</span></td>
+                <td class="px-4 py-3"><a href="#" onclick="showToast('Opening Etherscan')" class="text-amber-400 hover:underline font-mono">0x7e2a...</a></td>
+              </tr>
+              <tr class="table-row">
+                <td class="px-5 py-3">Week 22</td>
+                <td class="px-4 py-3 font-mono">46,840 PRM</td>
+                <td class="px-4 py-3 font-mono">975,833 PRM</td>
+                <td class="px-4 py-3 text-amber-400 font-medium">4.8%</td>
+                <td class="px-4 py-3 text-zinc-400">Jun 1, 00:00 UTC</td>
+                <td class="px-4 py-3"><span class="text-emerald-400">Success</span></td>
+                <td class="px-4 py-3"><a href="#" onclick="showToast('Opening Etherscan')" class="text-amber-400 hover:underline font-mono">0x3d8f...</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="flex gap-x-3">
+          <button onclick="showToast('Manual snapshot triggered · Awaiting multi-sig')"
+            class="px-5 py-2 text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-colors flex items-center gap-x-2">
+            <i class="fa-solid fa-camera text-xs"></i> Trigger Manual Snapshot
+          </button>
+          <div class="text-xs text-zinc-500 flex items-center">No timelock required · Read-only historical emission</div>
+        </div>
+      </div>
+
+    </div><!-- end content -->
+  </div><!-- end main -->
+</div><!-- end wrapper -->
+
+<!-- Multi-Sig Modal -->
+<div id="msModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+  <div class="card w-full max-w-sm rounded-3xl p-6 mx-4">
+    <div class="flex items-center gap-x-3 mb-4">
+      <div class="w-9 h-9 bg-amber-900/30 rounded-2xl flex items-center justify-center">
+        <i class="fa-solid fa-key text-amber-400"></i>
+      </div>
+      <div>
+        <div class="font-semibold">Multi-Sig Required</div>
+        <div class="text-xs text-zinc-400 mt-0.5">3 of 5 signatures + 48h timelock</div>
+      </div>
+    </div>
+    <div id="msAction" class="text-xs text-zinc-300 bg-zinc-900 rounded-2xl px-4 py-3 mb-4 font-mono"></div>
+    <div class="space-y-2 mb-5 text-xs">
+      <div class="flex justify-between"><span class="text-zinc-400">Required signatures</span><span class="font-medium">3 of 5</span></div>
+      <div class="flex justify-between"><span class="text-zinc-400">Timelock</span><span class="font-medium">48 hours</span></div>
+      <div class="flex justify-between"><span class="text-zinc-400">Effective after</span><span class="font-medium text-amber-400" id="msEffective"></span></div>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <button onclick="closeMsModal()" class="py-2.5 text-sm bg-zinc-800 hover:bg-zinc-700 rounded-2xl transition-colors">Cancel</button>
+      <button onclick="submitMs()" class="py-2.5 text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-black rounded-2xl transition-colors">Submit to Multi-Sig</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.documentElement.style.setProperty('--accent', '#F59E0B');
+
+  // UTC clock
+  function updateClock() {
+    const now = new Date();
+    const h = String(now.getUTCHours()).padStart(2,'0');
+    const m = String(now.getUTCMinutes()).padStart(2,'0');
+    const s = String(now.getUTCSeconds()).padStart(2,'0');
+    const el = document.getElementById('utc-clock');
+    if (el) el.textContent = `${h}:${m}:${s}`;
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // Section navigation
+  function showSection(name) {
+    document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
+    document.getElementById('section-' + name).classList.add('active');
+    document.querySelectorAll('.section-link').forEach(el => {
+      el.classList.remove('nav-active');
+      el.classList.add('text-zinc-400');
+      const icon = el.querySelector('i');
+      if (icon) icon.style.color = '';
+    });
+    const active = document.querySelector(`[data-section="${name}"]`);
+    if (active) {
+      active.classList.add('nav-active');
+      active.classList.remove('text-zinc-400');
+      const icon = active.querySelector('i');
+      if (icon) icon.style.color = '#F59E0B';
+    }
+    const titles = {
+      overview: 'Overview', nodes: 'Node Management', oracle: 'Oracle Monitor', mintceiling: 'Mint Ceiling',
+      anticheat: 'Anti-Cheat Review', users: 'User Management',
+      reserve: 'Reserve Monitor', treasury: 'Treasury',
+      payouts: 'Payout Controls', fees: 'Fee Controls',
+      difficulty: 'Difficulty Override', transparency: 'Entity Transparency'
+    };
+    document.getElementById('topbar-title').textContent = titles[name] || name;
+
+    // Build chart if overview
+    if (name === 'overview') buildRevenueChart();
+  }
+
+  // Revenue chart
+  let revenueChart = null;
+  function buildRevenueChart() {
+    const ctx = document.getElementById('revenueChart');
+    if (!ctx) return;
+    if (revenueChart) { revenueChart.destroy(); revenueChart = null; }
+    const labels = Array.from({length:24}, (_,i) => `${String(23-i).padStart(2,'0')}:00`).reverse();
+    const buyFees  = [1800,1900,2100,2000,2200,2400,2800,3100,2900,3200,3400,3600,3800,4200,4000,4400,4600,4800,5100,4900,5400,5200,5800,6000];
+    const sellFees = [2400,2600,2800,2700,3000,3200,3600,4000,3800,4200,4500,4700,5000,5400,5200,5600,5900,6200,6500,6300,7000,6700,7400,7600];
+    revenueChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label:'Buy fees', data:buyFees,  borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,0.06)', borderWidth:1.5, fill:true, tension:0.4, pointRadius:0 },
+          { label:'Sell fees', data:sellFees, borderColor:'#F59E0B', backgroundColor:'rgba(245,158,11,0.06)', borderWidth:1.5, fill:true, tension:0.4, pointRadius:0 }
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins: {
+          legend:{display:false},
+          tooltip:{mode:'index',intersect:false,backgroundColor:'#18181b',borderColor:'#27272a',borderWidth:1,titleColor:'#f4f4f5',bodyColor:'#a1a1aa',callbacks:{label:c=>`${c.dataset.label}: $${c.raw.toLocaleString()}`}}
+        },
+        scales:{
+          x:{grid:{color:'#1f1f1f'},ticks:{color:'#52525b',font:{size:9}},border:{color:'#27272a'}},
+          y:{grid:{color:'#1f1f1f'},ticks:{color:'#52525b',font:{size:9},callback:v=>'$'+v.toLocaleString()},border:{color:'#27272a'}}
+        },
+        interaction:{intersect:false,mode:'index'}
+      }
+    });
+  }
+
+  // Multi-sig modal
+  function showMultiSigModal(action) {
+    document.getElementById('msAction').textContent = action;
+    const d = new Date(Date.now() + 48*60*60*1000);
+    document.getElementById('msEffective').textContent = d.toUTCString().replace(' GMT','') + ' UTC';
+    document.getElementById('msModal').classList.remove('hidden');
+  }
+  function closeMsModal() {
+    document.getElementById('msModal').classList.add('hidden');
+  }
+  function submitMs() {
+    closeMsModal();
+    showToast('Submitted to multi-sig queue · Awaiting 3 of 5 signatures');
+  }
+  document.getElementById('msModal').addEventListener('click', function(e) {
+    if (e.target === this) closeMsModal();
+  });
+
+  // Toggle switches
+  function toggleSwitch(track) { track.classList.toggle('on'); }
+
+  // Toast
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1a1a1a;border:1px solid #2a2a2a;padding:10px 18px;border-radius:14px;display:flex;align-items:center;gap:10px;font-size:13px;z-index:9999;';
+    t.innerHTML = '<i class="fa-solid fa-check-circle" style="color:#4ade80;"></i><span>' + msg + '</span>';
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.transition='opacity 0.3s'; t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 2400);
+  }
+
+  // Init
+  buildRevenueChart();
+</script>
+</body>
+</html>

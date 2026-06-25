@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+/* Primora design tokens, extracted verbatim from design-reference/overview.html
+   (:root --bg/--surface/--border/--accent plus the body and state colors). */
+@theme {
+  --color-primora-bg: #0a0a0a;
+  --color-primora-surface: #111111;
+  --color-primora-border: #1f1f1f;
+  --color-primora-accent: #f59e0b;
+  --color-primora-accent-dim: #d4a847;
+  --color-primora-text: #e4e4e7;
+  --color-primora-muted: #71717a;
+  --color-primora-dim: #52525b;
+  --color-primora-positive: #4ade80;
+  --color-primora-negative: #ef4444;
+
+  --font-body: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), var(--font-inter), sans-serif;
+}
+
+body {
+  background: var(--color-primora-bg);
+  color: var(--color-primora-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}

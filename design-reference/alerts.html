@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Primora • Alerts</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+
+    :root { --accent: #F59E0B; }
+
+    body { font-family: 'Inter', system-ui, sans-serif; }
+
+    .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 600; }
+
+    .primora-dark { background-color: #0a0a0a; }
+
+    .card { background-color: #111111; border: 1px solid #1f1f1f; }
+
+    .metric-value { font-variant-numeric: tabular-nums; }
+
+    .nav-active {
+      background-color: #1f1f1f;
+      color: white;
+      border-left: 2px solid #F59E0B;
+      padding-left: calc(1rem - 2px);
+    }
+
+    .status-dot { animation: pulse 2s cubic-bezier(0.4, 0.0, 0.2, 1) infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    input[type=number] { color: #e4e4e7; outline: none; }
+    input[type=number]:focus { border-color: #F59E0B; }
+    select { color: #e4e4e7; outline: none; }
+
+    .alert-row { transition: opacity 0.3s ease; }
+    .alert-row.dismissed { opacity: 0.4; }
+
+    .toggle-track {
+      width: 36px; height: 20px;
+      background: #3f3f46;
+      border-radius: 10px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .toggle-track.on { background: #059669; }
+    .toggle-thumb {
+      width: 14px; height: 14px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: 3px; left: 3px;
+      transition: left 0.2s;
+    }
+    .toggle-track.on .toggle-thumb { left: 19px; }
+  </style>
+</head>
+<body class="primora-dark text-zinc-200">
+<div class="flex h-screen overflow-hidden">
+
+  <!-- Sidebar -->
+  <div class="w-64 border-r border-zinc-800 flex flex-col">
+
+    <div class="px-6 border-b border-zinc-800 flex items-center" style="height:73px;">
+      <div class="flex items-center gap-x-3">
+        <div class="w-9 h-9 bg-amber-500 rounded-2xl flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-shield-halved text-black text-lg"></i>
+        </div>
+        <span class="font-display text-2xl font-semibold tracking-tighter">Primora</span>
+      </div>
+    </div>
+
+    <div class="px-3 py-4 flex-1">
+      <nav class="space-y-1 text-sm">
+        <a href="overview.html" class="flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg">
+          <i class="fa-solid fa-chart-line w-4"></i><span>Overview</span>
+        </a>
+        <a href="mine.html" class="flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg">
+          <i class="fa-solid fa-microchip w-4"></i><span>Mine</span>
+        </a>
+        <a href="mymining.html" class="flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg">
+          <i class="fa-solid fa-user w-4"></i><span>My Mining</span>
+        </a>
+        <a href="stake.html" class="flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg">
+          <i class="fa-solid fa-lock w-4"></i><span>Stake</span>
+        </a>
+        <a href="exchange.html" class="flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg">
+          <i class="fa-solid fa-exchange-alt w-4"></i><span>Exchange</span>
+        </a>
+        <a href="sites.html" class="flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg">
+          <i class="fa-solid fa-globe w-4"></i><span>Sites</span>
+        </a>
+        <a href="wallet.html" class="flex items-center gap-x-3 px-4 py-2.5 font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg">
+          <i class="fa-solid fa-wallet w-4"></i><span>Wallet &amp; Payouts</span>
+        </a>
+        <a href="alerts.html" class="flex items-center gap-x-3 px-4 py-2.5 font-medium rounded-lg nav-active">
+          <i class="fa-solid fa-bell w-4 text-amber-400"></i><span>Alerts</span>
+          <span class="ml-auto bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">4</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-4 border-t border-zinc-800">
+      <div class="flex items-center gap-x-3">
+        <div class="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-user text-xs text-zinc-400"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-medium font-mono truncate">0x71C...9f3A</div>
+          <div class="flex items-center gap-x-1.5 mt-0.5">
+            <div class="w-1.5 h-1.5 bg-emerald-400 rounded-full status-dot"></div>
+            <span class="text-[10px] text-emerald-400">Connected · KYC Full</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="flex-1 flex flex-col overflow-hidden min-w-0">
+
+    <!-- Topbar -->
+    <div class="border-b border-zinc-800 px-6 flex items-center justify-between flex-shrink-0 primora-dark" style="height:73px;">
+      <div class="flex items-center gap-x-3">
+        <span class="font-display text-lg tracking-tight">Alerts</span>
+        <div class="px-3 py-1 bg-zinc-900 text-xs rounded-full flex items-center gap-x-2 border border-zinc-800">
+          <div class="w-2 h-2 bg-emerald-400 rounded-full status-dot"></div>
+          <span class="text-emerald-400 text-xs font-medium">Mainnet • Polygon + Ethereum</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-x-3">
+        <div class="px-3 py-1.5 bg-zinc-900 border border-zinc-700 rounded-2xl text-xs flex items-center gap-x-2 max-w-[280px]">
+          <i class="fa-solid fa-shield-halved text-amber-400"></i>
+          <span class="text-[10px] text-zinc-400 truncate">All mining is virtual. No real commodities.</span>
+        </div>
+        <div class="px-3 py-1 bg-zinc-900 rounded-2xl text-xs flex items-center gap-x-2">
+          <span class="text-zinc-400">KYC:</span>
+          <span class="font-medium text-emerald-400">Full</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-auto p-6">
+      <div class="max-w-5xl mx-auto space-y-5">
+
+        <!-- Page header -->
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-semibold font-display tracking-tight">Alerts &amp; Notifications</h1>
+            <p class="text-zinc-400 text-sm mt-0.5">Stay informed about your mining activity and platform status</p>
+          </div>
+          <button onclick="dismissAll()" class="text-xs text-zinc-400 hover:text-zinc-200 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 rounded-2xl transition-colors">
+            Dismiss all
+          </button>
+        </div>
+
+        <!-- Active Alerts -->
+        <div class="card rounded-3xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <span class="font-semibold">Active Alerts</span>
+            <span id="alert-count" class="text-xs px-2.5 py-1 bg-red-900/30 text-red-400 rounded-full font-semibold">4 new</span>
+          </div>
+
+          <div class="space-y-3" id="alerts-list">
+
+            <!-- Alert 1: Warning -->
+            <div class="alert-row flex items-start gap-x-4 p-4 bg-zinc-900 rounded-2xl">
+              <i class="fa-solid fa-exclamation-triangle text-amber-400 mt-0.5 flex-shrink-0"></i>
+              <div class="flex-1 min-w-0">
+                <div class="font-medium text-sm">Johannesburg is experiencing intermittent connectivity</div>
+                <div class="text-xs text-zinc-400 mt-0.5">Feb 18, 2026 · 14:22 · Auto-recovered after 2 minutes</div>
+              </div>
+              <div class="flex items-center gap-x-2 flex-shrink-0">
+                <span class="text-xs px-2.5 py-1 bg-amber-900/30 text-amber-400 rounded-2xl">Warning</span>
+                <button onclick="dismissAlert(this)" class="text-zinc-600 hover:text-zinc-400 transition-colors">
+                  <i class="fa-solid fa-times text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Alert 2: Critical -->
+            <div class="alert-row flex items-start gap-x-4 p-4 bg-zinc-900 rounded-2xl">
+              <i class="fa-solid fa-exclamation-circle text-red-400 mt-0.5 flex-shrink-0"></i>
+              <div class="flex-1 min-w-0">
+                <div class="font-medium text-sm">Your mining session was flagged. Please check your setup.</div>
+                <div class="text-xs text-zinc-400 mt-0.5">Feb 17, 2026 · 22:45 · <a href="mymining.html" class="text-amber-400 hover:underline">View details →</a></div>
+              </div>
+              <div class="flex items-center gap-x-2 flex-shrink-0">
+                <span class="text-xs px-2.5 py-1 bg-red-900/30 text-red-400 rounded-2xl">Action needed</span>
+                <button onclick="dismissAlert(this)" class="text-zinc-600 hover:text-zinc-400 transition-colors">
+                  <i class="fa-solid fa-times text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Alert 3: Info -->
+            <div class="alert-row flex items-start gap-x-4 p-4 bg-zinc-900 rounded-2xl">
+              <i class="fa-solid fa-info-circle text-blue-400 mt-0.5 flex-shrink-0"></i>
+              <div class="flex-1 min-w-0">
+                <div class="font-medium text-sm">Mining difficulty adjusts in 11 days</div>
+                <div class="text-xs text-zinc-400 mt-0.5">Feb 18, 2026 · 09:10 · Your rewards may change slightly</div>
+              </div>
+              <div class="flex items-center gap-x-2 flex-shrink-0">
+                <span class="text-xs px-2.5 py-1 bg-blue-900/30 text-blue-400 rounded-2xl">Info</span>
+                <button onclick="dismissAlert(this)" class="text-zinc-600 hover:text-zinc-400 transition-colors">
+                  <i class="fa-solid fa-times text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Alert 4: Info -->
+            <div class="alert-row flex items-start gap-x-4 p-4 bg-zinc-900 rounded-2xl">
+              <i class="fa-solid fa-lock text-amber-400 mt-0.5 flex-shrink-0"></i>
+              <div class="flex-1 min-w-0">
+                <div class="font-medium text-sm">Your Ethereum staking position unlocks in 7 days</div>
+                <div class="text-xs text-zinc-400 mt-0.5">Feb 18, 2026 · 06:00 · <a href="stake.html" class="text-amber-400 hover:underline">Manage stake →</a></div>
+              </div>
+              <div class="flex items-center gap-x-2 flex-shrink-0">
+                <span class="text-xs px-2.5 py-1 bg-amber-900/30 text-amber-400 rounded-2xl">Reminder</span>
+                <button onclick="dismissAlert(this)" class="text-zinc-600 hover:text-zinc-400 transition-colors">
+                  <i class="fa-solid fa-times text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Notification Settings -->
+        <div class="card rounded-3xl p-5">
+          <div class="font-semibold mb-5">Notification Settings</div>
+
+          <div class="space-y-0 divide-y divide-zinc-800">
+
+            <!-- Header row -->
+            <div class="grid grid-cols-4 gap-4 pb-3 text-[10px] font-semibold tracking-wider text-zinc-500">
+              <div class="col-span-2">Event</div>
+              <div class="text-center">Email</div>
+              <div class="text-center">In-app</div>
+            </div>
+
+            <!-- Rows -->
+            <div class="grid grid-cols-4 gap-4 py-3.5 items-center text-sm">
+              <div class="col-span-2">
+                <div class="font-medium">Payout received</div>
+                <div class="text-xs text-zinc-500 mt-0.5">When a payout is sent to your wallet</div>
+              </div>
+              <div class="flex justify-center"><div class="toggle-track on" onclick="toggleSwitch(this)"><div class="toggle-thumb"></div></div></div>
+              <div class="flex justify-center"><div class="toggle-track on" onclick="toggleSwitch(this)"><div class="toggle-thumb"></div></div></div>
+            </div>
+
+            <div class="grid grid-cols-4 gap-4 py-3.5 items-center text-sm">
+              <div class="col-span-2">
+                <div class="font-medium">Mining reward earned</div>
+                <div class="text-xs text-zinc-500 mt-0.5">Daily digest of your PRM earnings</div>
+              </div>
+              <div class="flex justify-center"><div class="toggle-track on" onclick="toggleSwitch(this)"><div class="toggle-thumb"></div></div></div>
+              <div class="flex justify-center"><div class="toggle-track on" onclick="toggleSwitch(this)"><div class="toggle-thumb"></div></div></div>
+            </div>
+
+            <div class="grid grid-cols-4 gap-4 py-3.5 items-center text-sm">
+              <div class="col-span-2">
+                <div class="font-medium">Mining session flagged</div>
+                <div class="text-xs text-zinc-500 mt-0.5">If your session requires attention</div>
+              </div>
+              <div class="flex justify-center"><div class="toggle-track on" onclick="toggleSwitch(this)"><div class="toggle-thumb"></div></div></div>
+              <div class="flex justify-center"><div class="toggle-track on" onclick="toggleSwitch(this)"><div class="toggle-thumb"></div></div></div>
+            </div>
+
+            <div class="grid grid-cols-4 gap-4 py-3.5 items-center text-sm">
+              <div class="col-span-2">
+                <div class="font-medium">Site goes offline</div>
+                <div class="text-xs text-zinc-500 mt-0.5">When your active mining site has an issue</div>
+              </div>
+              <div class="flex justify-center"><div class="toggle-track on" onclick="toggleSwitch(this)"><div class="toggle-thumb"></div></div></div>
+              <div class="flex justify-center"><div class="toggle-track on" onclick="toggleSwitch(this)"><div class="toggle-thumb"></div></div></div>
+            </div>
+
+            <div class="grid grid-cols-4 gap-4 py-3.5 items-center text-sm">
+              <div class="col-span-2">
+                <div class="font-medium">Staking position expiring</div>
+                <div class="text-xs text-zinc-500 mt-0.5">7 days and 1 day before lock period ends</div>
+              </div>
+              <div class="flex justify-center"><div class="toggle-track on" onclick="toggleSwitch(this)"><div class="toggle-thumb"></div></div></div>
+              <div class="flex justify-center"><div class="toggle-track on" onclick="toggleSwitch(this)"><div class="toggle-thumb"></div></div></div>
+            </div>
+
+            <div class="grid grid-cols-4 gap-4 py-3.5 items-center text-sm">
+              <div class="col-span-2">
+                <div class="font-medium">KYC status update</div>
+                <div class="text-xs text-zinc-500 mt-0.5">When your verification status changes</div>
+              </div>
+              <div class="flex justify-center"><div class="toggle-track on" onclick="toggleSwitch(this)"><div class="toggle-thumb"></div></div></div>
+              <div class="flex justify-center"><div class="toggle-track" onclick="toggleSwitch(this)"><div class="toggle-thumb"></div></div></div>
+            </div>
+
+            <div class="grid grid-cols-4 gap-4 py-3.5 items-center text-sm">
+              <div class="col-span-2">
+                <div class="font-medium">Unusual account activity</div>
+                <div class="text-xs text-zinc-500 mt-0.5">Security alerts on your account</div>
+              </div>
+              <div class="flex justify-center"><div class="toggle-track on" onclick="toggleSwitch(this)"><div class="toggle-thumb"></div></div></div>
+              <div class="flex justify-center"><div class="toggle-track on" onclick="toggleSwitch(this)"><div class="toggle-thumb"></div></div></div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Price Thresholds -->
+        <div class="card rounded-3xl p-5">
+          <div class="font-semibold mb-4">Price Thresholds</div>
+          <div class="space-y-4 text-sm">
+
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-medium">PRM price change</div>
+                <div class="text-xs text-zinc-500 mt-0.5">Alert when PRM price moves by this amount</div>
+              </div>
+              <div class="flex items-center gap-x-2">
+                <input type="number" value="5" min="1" max="50"
+                  class="w-16 bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-1.5 text-center text-sm">
+                <span class="text-xs text-zinc-400">%</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-medium">Reserve ratio warning</div>
+                <div class="text-xs text-zinc-500 mt-0.5">Alert when platform reserve drops below this level</div>
+              </div>
+              <div class="flex items-center gap-x-2">
+                <input type="number" value="120" min="100" max="200"
+                  class="w-16 bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-1.5 text-center text-sm">
+                <span class="text-xs text-zinc-400">%</span>
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-zinc-800">
+              <button onclick="saveThresholds()" class="px-5 py-2 text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-black transition-colors rounded-2xl">
+                Save settings
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.documentElement.style.setProperty('--accent', '#F59E0B');
+
+  let activeCount = 4;
+
+  function dismissAlert(btn) {
+    const row = btn.closest('.alert-row');
+    row.classList.add('dismissed');
+    setTimeout(() => {
+      row.style.display = 'none';
+      activeCount = Math.max(0, activeCount - 1);
+      const countEl = document.getElementById('alert-count');
+      if (activeCount === 0) {
+        countEl.textContent = 'All clear';
+        countEl.className = 'text-xs px-2.5 py-1 bg-emerald-900/30 text-emerald-400 rounded-full font-semibold';
+      } else {
+        countEl.textContent = activeCount + ' new';
+      }
+    }, 300);
+  }
+
+  function dismissAll() {
+    document.querySelectorAll('.alert-row').forEach(row => {
+      row.classList.add('dismissed');
+      setTimeout(() => row.style.display = 'none', 300);
+    });
+    activeCount = 0;
+    const countEl = document.getElementById('alert-count');
+    countEl.textContent = 'All clear';
+    countEl.className = 'text-xs px-2.5 py-1 bg-emerald-900/30 text-emerald-400 rounded-full font-semibold';
+    showToast('All alerts dismissed');
+  }
+
+  function toggleSwitch(track) {
+    track.classList.toggle('on');
+    showToast('Notification preference saved');
+  }
+
+  function saveThresholds() {
+    showToast('Threshold settings saved');
+  }
+
+  function showToast(message) {
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1a1a1a;border:1px solid #2a2a2a;padding:10px 18px;border-radius:14px;display:flex;align-items:center;gap:10px;font-size:13px;z-index:9999;';
+    t.innerHTML = '<i class="fa-solid fa-check-circle" style="color:#4ade80;"></i><span>' + message + '</span>';
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.transition = 'opacity 0.3s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2400);
+  }
+</script>
+</body>
+</html>

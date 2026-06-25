@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Primora • Stake</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; border: 0; }
+    :root { --bg: #0a0a0a; --surface: #111111; --border: #1f1f1f; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: #e4e4e7; -webkit-font-smoothing: antialiased; }
+    .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 600; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; }
+    .pulse { animation: pulse 2s cubic-bezier(.4,0,.6,1) infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+    .sidebar { width: 256px; border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; background: var(--bg); }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+    .topbar { height: 73px; border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; background: var(--bg); }
+    .content { flex: 1; overflow: auto; padding: 24px; }
+    .inner { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    .logo-area { height: 73px; padding: 0 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    .logo-icon { width: 36px; height: 36px; background: #F59E0B; border-radius: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 16px; font-size: 14px; font-weight: 500; color: #71717a; border-radius: 10px; text-decoration: none; transition: color .15s, background .15s; }
+    .nav-link:hover { color: #e4e4e7; background: #111; }
+    .nav-link.active { background: #1f1f1f; color: #fff; border-left: 2px solid #F59E0B; padding-left: 14px; }
+    .wallet-area { padding: 16px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .chain-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(6px); z-index: 50; align-items: center; justify-content: center; }
+    .modal-bg.open { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 28px; width: 100%; max-width: 400px; margin: 16px; }
+    .btn-primary { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; background: #F59E0B; color: #0a0a0a; font-weight: 700; font-size: 13px; border-radius: 12px; cursor: pointer; border: none; font-family: inherit; }
+    .btn-primary:hover { background: #FCD34D; }
+    .btn-ghost { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; background: #1f1f1f; color: #e4e4e7; font-weight: 600; font-size: 13px; border-radius: 12px; cursor: pointer; border: none; font-family: inherit; }
+    .lock-btn { padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; border: 1px solid #2a2a2a; background: #111; color: #71717a; transition: all .15s; }
+    .lock-btn.active { border-color: #F59E0B; background: rgba(245,158,11,.08); color: #F59E0B; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 8px 0; font-size: 9px; font-weight: 700; letter-spacing: .06em; color: #52525b; text-transform: uppercase; border-bottom: 1px solid #1a1a1a; }
+    td { padding: 12px 0; border-bottom: 1px solid #141414; font-size: 13px; }
+    tr:last-child td { border-bottom: none; }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo-area">
+      <div class="logo-icon"><i class="fa-solid fa-shield-halved" style="color:#0a0a0a;font-size:16px;"></i></div>
+      <span class="font-display" style="font-size:20px;letter-spacing:-.01em;">Primora</span>
+    </div>
+    <div style="padding:12px;flex:1;">
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <a href="overview.html" class="nav-link"><i class="fa-solid fa-chart-line" style="width:16px;"></i><span>Overview</span></a>
+        <a href="mine.html" class="nav-link"><i class="fa-solid fa-microchip" style="width:16px;"></i><span>Mine</span></a>
+        <a href="mymining.html" class="nav-link"><i class="fa-solid fa-user" style="width:16px;"></i><span>My Mining</span></a>
+        <a href="stake.html" class="nav-link active"><i class="fa-solid fa-lock" style="width:16px;color:#F59E0B;"></i><span>Stake</span></a>
+        <a href="exchange.html" class="nav-link"><i class="fa-solid fa-exchange-alt" style="width:16px;"></i><span>Exchange</span></a>
+        <a href="sites.html" class="nav-link"><i class="fa-solid fa-globe" style="width:16px;"></i><span>Sites</span></a>
+        <a href="wallet_payouts.html" class="nav-link"><i class="fa-solid fa-wallet" style="width:16px;"></i><span>Wallet &amp; Payouts</span></a>
+        <a href="alerts.html" class="nav-link"><i class="fa-solid fa-bell" style="width:16px;"></i><span>Alerts</span>
+          <span style="margin-left:auto;background:#ef4444;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:99px;">4</span>
+        </a>
+      </div>
+    </div>
+    <div class="wallet-area">
+      <div style="width:32px;height:32px;background:#1f1f1f;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i class="fa-solid fa-user" style="font-size:12px;color:#71717a;"></i>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:500;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">0x71C...9f3A</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+          <span class="pulse" style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;"></span>
+          <span style="font-size:10px;color:#4ade80;">Connected · KYC Full</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="font-display" style="font-size:17px;">Stake</span>
+        <div style="padding:4px 12px;background:#111;border:1px solid #1f1f1f;border-radius:99px;display:flex;align-items:center;gap:8px;">
+          <span class="pulse" style="width:8px;height:8px;border-radius:50%;background:#4ade80;display:inline-block;"></span>
+          <span style="font-size:11px;color:#4ade80;font-weight:500;">Mainnet · Polygon + Ethereum</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="padding:6px 12px;background:#111;border:1px solid #2a2a2a;border-radius:99px;display:flex;align-items:center;gap:8px;">
+          <i class="fa-solid fa-shield-halved" style="color:#F59E0B;font-size:11px;"></i>
+          <span style="font-size:10px;color:#71717a;">All mining is virtual. No real commodities.</span>
+        </div>
+        <div style="padding:5px 12px;background:#111;border-radius:99px;display:flex;align-items:center;gap:6px;font-size:12px;">
+          <span style="color:#71717a;">KYC:</span><span style="font-weight:600;color:#4ade80;">Full</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="inner">
+
+        <div>
+          <h1 class="font-display" style="font-size:22px;letter-spacing:-.01em;">Stake</h1>
+          <p style="font-size:13px;color:#71717a;margin-top:4px;">Staking PRM increases your mining boost and earns a share of platform revenue. Anyone can stake -- mining is not required.</p>
+        </div>
+
+        <!-- Current positions summary -->
+        <div class="card" style="padding:22px;">
+          <div style="font-weight:600;font-size:14px;margin-bottom:16px;">Your Positions</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px;">
+            <div>
+              <div style="font-size:10px;color:#52525b;margin-bottom:4px;">Polygon Staked</div>
+              <div style="font-size:22px;font-weight:700;font-family:'Space Grotesk',sans-serif;font-variant-numeric:tabular-nums;">0</div>
+              <div style="font-size:11px;color:#71717a;margin-top:2px;">PRM · No lock</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:#52525b;margin-bottom:4px;">Ethereum Staked</div>
+              <div style="font-size:22px;font-weight:700;font-family:'Space Grotesk',sans-serif;font-variant-numeric:tabular-nums;">10,000</div>
+              <div style="font-size:11px;color:#71717a;margin-top:2px;">PRM · 180-day lock</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:#52525b;margin-bottom:4px;">Effective Boost</div>
+              <div style="font-size:22px;font-weight:700;font-family:'Space Grotesk',sans-serif;color:#F59E0B;">+40%</div>
+              <div style="font-size:11px;color:#F59E0B;margin-top:2px;">Maximum · 1.6x lock multiplier</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:#52525b;margin-bottom:4px;">Weekly Reward</div>
+              <div style="font-size:22px;font-weight:700;font-family:'Space Grotesk',sans-serif;color:#4ade80;">$4.28</div>
+              <div style="font-size:11px;color:#4ade80;margin-top:2px;">USDC · 20% of platform fees</div>
+            </div>
+          </div>
+          <div style="padding:12px 14px;background:rgba(245,158,11,.04);border:1px solid rgba(245,158,11,.1);border-radius:12px;font-size:11px;color:#71717a;">
+            <strong style="color:#e4e4e7;">Boost formula:</strong> Effective Boost = Base Boost × Lock Multiplier. Maximum effective boost is 40%, enforced in the staking contract. Stake on both chains -- totals combine for tier calculation.
+          </div>
+        </div>
+
+        <!-- Boost reference table -->
+        <div class="card" style="padding:22px;">
+          <div style="font-weight:600;font-size:14px;margin-bottom:16px;">Boost Reference</div>
+          <div class="two-col" style="gap:20px;">
+
+            <!-- Polygon tiers -->
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                <span class="chain-badge" style="background:rgba(123,63,228,.1);color:#9B6FEA;">Polygon</span>
+                <span style="font-size:12px;color:#71717a;">Flexible · Daily payouts · Min 100 PRM</span>
+              </div>
+              <table>
+                <thead>
+                  <tr><th>Staked PRM</th><th style="text-align:right;">Base Boost</th><th style="text-align:right;">Lock</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>100 - 999</td><td style="text-align:right;color:#4ade80;font-weight:600;">+5%</td><td style="text-align:right;color:#71717a;font-size:12px;">None</td></tr>
+                  <tr><td>1,000 - 4,999</td><td style="text-align:right;color:#4ade80;font-weight:600;">+10%</td><td style="text-align:right;color:#71717a;font-size:12px;">None</td></tr>
+                  <tr><td>5,000 - 9,999</td><td style="text-align:right;color:#4ade80;font-weight:600;">+18%</td><td style="text-align:right;color:#71717a;font-size:12px;">None</td></tr>
+                  <tr><td>10,000+</td><td style="text-align:right;color:#F59E0B;font-weight:700;">+25%</td><td style="text-align:right;color:#71717a;font-size:12px;">None</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Ethereum tiers -->
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                <span class="chain-badge" style="background:rgba(98,126,234,.1);color:#8299EE;">Ethereum</span>
+                <span style="font-size:12px;color:#71717a;">Locked · Weekly payouts · Min 10,000 PRM</span>
+              </div>
+              <table>
+                <thead>
+                  <tr><th>Lock Period</th><th style="text-align:right;">Multiplier</th><th style="text-align:right;">Max Boost (10k+)</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>30 days</td><td style="text-align:right;font-weight:600;">1.0x</td><td style="text-align:right;color:#4ade80;font-weight:600;">+25%</td></tr>
+                  <tr><td>90 days</td><td style="text-align:right;font-weight:600;">1.3x</td><td style="text-align:right;color:#4ade80;font-weight:600;">+32.5%</td></tr>
+                  <tr><td>180 days</td><td style="text-align:right;font-weight:700;color:#F59E0B;">1.6x</td><td style="text-align:right;color:#F59E0B;font-weight:700;">+40% (max)</td></tr>
+                </tbody>
+              </table>
+              <div style="margin-top:10px;font-size:11px;color:#52525b;">Governance voting rights included at all lock tiers.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stake new -->
+        <div class="two-col" style="align-items:stretch;">
+
+          <!-- Polygon stake -->
+          <div class="card" style="padding:22px;display:flex;flex-direction:column;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+              <span class="chain-badge" style="background:rgba(123,63,228,.1);color:#9B6FEA;">Polygon</span>
+              <span style="font-weight:600;font-size:14px;">Stake PRM</span>
+            </div>
+            <div style="margin-bottom:14px;">
+              <label style="font-size:11px;color:#71717a;display:block;margin-bottom:6px;">Amount to stake (PRM)</label>
+              <input type="number" id="poly-amount" placeholder="Min. 100 PRM" oninput="calcBoost('poly')"
+                style="width:100%;padding:10px 14px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:10px;font-size:14px;color:#e4e4e7;font-family:monospace;outline:none;">
+            </div>
+            <div style="background:#0d0d0f;border:1px solid #1a1a1a;border-radius:12px;padding:14px;margin-bottom:16px;">
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+                <span style="color:#71717a;">Mining boost</span>
+                <span style="font-weight:600;color:#4ade80;" id="poly-boost">--</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+                <span style="color:#71717a;">Lock period</span>
+                <span style="font-weight:600;color:#4ade80;">None · Withdraw any time</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;">
+                <span style="color:#71717a;">Revenue share</span>
+                <span style="font-weight:600;">20% of platform fees · Daily</span>
+              </div>
+            </div>
+            <div style="flex:1;"></div>
+            <button onclick="openStakeModal('polygon')" class="btn-primary" style="width:100%;justify-content:center;">
+              <i class="fa-solid fa-lock" style="font-size:11px;"></i> Stake on Polygon
+            </button>
+          </div>
+
+          <!-- Ethereum stake -->
+          <div class="card" style="padding:22px;border-color:rgba(245,158,11,.15);">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+              <span class="chain-badge" style="background:rgba(98,126,234,.1);color:#8299EE;">Ethereum</span>
+              <span style="font-weight:600;font-size:14px;">Stake PRM</span>
+            </div>
+            <div style="margin-bottom:14px;">
+              <label style="font-size:11px;color:#71717a;display:block;margin-bottom:6px;">Amount to stake (PRM)</label>
+              <input type="number" id="eth-amount" placeholder="Min. 10,000 PRM" oninput="calcBoost('eth')"
+                style="width:100%;padding:10px 14px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:10px;font-size:14px;color:#e4e4e7;font-family:monospace;outline:none;">
+            </div>
+            <div style="margin-bottom:14px;">
+              <label style="font-size:11px;color:#71717a;display:block;margin-bottom:8px;">Lock period</label>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+                <button class="lock-btn" id="lock-30" onclick="setLock(30)">30 days<br><span style="font-size:9px;">1.0x</span></button>
+                <button class="lock-btn" id="lock-90" onclick="setLock(90)">90 days<br><span style="font-size:9px;">1.3x</span></button>
+                <button class="lock-btn active" id="lock-180" onclick="setLock(180)">180 days<br><span style="font-size:9px;color:#F59E0B;">1.6x</span></button>
+              </div>
+            </div>
+            <div style="background:#0d0d0f;border:1px solid rgba(245,158,11,.1);border-radius:12px;padding:14px;margin-bottom:16px;">
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+                <span style="color:#71717a;">Lock multiplier</span>
+                <span style="font-weight:700;color:#F59E0B;" id="eth-multiplier">1.6x</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+                <span style="color:#71717a;">Effective boost</span>
+                <span style="font-weight:700;color:#F59E0B;" id="eth-boost">--</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+                <span style="color:#71717a;">Revenue share</span>
+                <span style="font-weight:600;">20% of platform fees · Weekly</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;">
+                <span style="color:#71717a;">Governance</span>
+                <span style="font-weight:600;color:#4ade80;">Voting rights included</span>
+              </div>
+            </div>
+            <button onclick="openStakeModal('ethereum')" class="btn-primary" style="width:100%;justify-content:center;">
+              <i class="fa-solid fa-lock" style="font-size:11px;"></i> Stake on Ethereum
+            </button>
+          </div>
+        </div>
+
+        <!-- Active positions -->
+        <div class="card" style="padding:22px;">
+          <div style="font-weight:600;font-size:14px;margin-bottom:16px;">Active Positions</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Chain</th>
+                <th>Amount</th>
+                <th>Lock</th>
+                <th>Multiplier</th>
+                <th style="text-align:right;">Boost</th>
+                <th style="text-align:right;">Unlocks</th>
+                <th style="text-align:right;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="chain-badge" style="background:rgba(98,126,234,.1);color:#8299EE;">Ethereum</span></td>
+                <td style="font-family:monospace;font-weight:600;">10,000 PRM</td>
+                <td style="color:#71717a;">180 days</td>
+                <td style="color:#F59E0B;font-weight:700;">1.6x</td>
+                <td style="text-align:right;color:#F59E0B;font-weight:700;">+40%</td>
+                <td style="text-align:right;color:#71717a;font-size:12px;">Dec 19, 2026</td>
+                <td style="text-align:right;">
+                  <span style="font-size:11px;padding:3px 8px;background:#1f1f1f;color:#52525b;border-radius:6px;">Locked</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="margin-top:12px;font-size:11px;color:#52525b;">
+            Maximum effective boost: 40% · Your current boost: 40% (at maximum)
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Stake Confirm Modal -->
+<div class="modal-bg" id="stake-modal">
+  <div class="modal">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <div style="width:40px;height:40px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+        <i class="fa-solid fa-lock" style="color:#F59E0B;font-size:15px;"></i>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:15px;" id="modal-chain-title">Confirm Stake</div>
+        <div style="font-size:12px;color:#71717a;margin-top:2px;">Review before staking</div>
+      </div>
+    </div>
+    <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:14px;padding:16px;margin-bottom:16px;display:flex;flex-direction:column;gap:8px;font-size:13px;">
+      <div style="display:flex;justify-content:space-between;"><span style="color:#71717a;">Chain</span><span style="font-weight:600;" id="modal-chain">Ethereum</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:#71717a;">Amount</span><span style="font-weight:600;" id="modal-amount">10,000 PRM</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:#71717a;">Lock period</span><span style="font-weight:600;" id="modal-lock">180 days</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:#71717a;">Lock multiplier</span><span style="font-weight:600;color:#F59E0B;" id="modal-mult">1.6x</span></div>
+      <div style="display:flex;justify-content:space-between;border-top:1px solid #1f1f1f;padding-top:8px;">
+        <span style="color:#71717a;">Effective boost</span>
+        <span style="font-weight:700;color:#F59E0B;" id="modal-boost">+40%</span>
+      </div>
+    </div>
+    <div style="background:rgba(245,158,11,.04);border:1px solid rgba(245,158,11,.1);border-radius:12px;padding:12px;margin-bottom:16px;font-size:11px;color:#71717a;line-height:1.6;">
+      Staking PRM amplifies your virtual mining power only. All mining on Primora is virtual. No real commodities are mined or owned. Payouts are not guaranteed and depend on network and market conditions.
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+      <input type="checkbox" id="stake-confirm-check" style="width:14px;height:14px;cursor:pointer;accent-color:#F59E0B;">
+      <label for="stake-confirm-check" style="font-size:12px;color:#71717a;cursor:pointer;">I understand and agree to the terms above</label>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <button onclick="closeStakeModal()" class="btn-ghost" style="width:100%;justify-content:center;">Cancel</button>
+      <button onclick="confirmStake()" class="btn-primary" style="width:100%;justify-content:center;">Confirm Stake</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let selectedLock = 180;
+  let stakeChain = 'ethereum';
+
+  const lockMultipliers = { 30: 1.0, 90: 1.3, 180: 1.6 };
+
+  function getBaseBoost(amount) {
+    if (amount < 100) return 0;
+    if (amount < 1000) return 5;
+    if (amount < 5000) return 10;
+    if (amount < 10000) return 18;
+    return 25;
+  }
+
+  function calcBoost(chain) {
+    if (chain === 'poly') {
+      const amount = parseFloat(document.getElementById('poly-amount').value) || 0;
+      const boost = getBaseBoost(amount);
+      document.getElementById('poly-boost').textContent = boost > 0 ? '+' + boost + '%' : '--';
+    } else {
+      const amount = parseFloat(document.getElementById('eth-amount').value) || 0;
+      const base = getBaseBoost(amount);
+      const mult = lockMultipliers[selectedLock];
+      const effective = Math.min(40, base * mult);
+      document.getElementById('eth-boost').textContent = base > 0 ? '+' + effective.toFixed(1) + '%' : '--';
+    }
+  }
+
+  function setLock(days) {
+    selectedLock = days;
+    [30, 90, 180].forEach(d => {
+      const btn = document.getElementById('lock-' + d);
+      btn.classList.toggle('active', d === days);
+    });
+    document.getElementById('eth-multiplier').textContent = lockMultipliers[days] + 'x';
+    calcBoost('eth');
+  }
+
+  function openStakeModal(chain) {
+    stakeChain = chain;
+    const isEth = chain === 'ethereum';
+    const amount = parseFloat(document.getElementById(isEth ? 'eth-amount' : 'poly-amount').value) || 0;
+    if (amount < (isEth ? 10000 : 100)) {
+      showToast('Minimum ' + (isEth ? '10,000' : '100') + ' PRM required');
+      return;
+    }
+    const base = getBaseBoost(amount);
+    const mult = isEth ? lockMultipliers[selectedLock] : 1.0;
+    const effective = Math.min(40, base * mult);
+    document.getElementById('modal-chain-title').textContent = 'Confirm Stake · ' + (isEth ? 'Ethereum' : 'Polygon');
+    document.getElementById('modal-chain').textContent = isEth ? 'Ethereum Mainnet' : 'Polygon';
+    document.getElementById('modal-amount').textContent = amount.toLocaleString() + ' PRM';
+    document.getElementById('modal-lock').textContent = isEth ? selectedLock + ' days' : 'None';
+    document.getElementById('modal-mult').textContent = isEth ? lockMultipliers[selectedLock] + 'x' : '1.0x';
+    document.getElementById('modal-boost').textContent = '+' + effective.toFixed(1) + '%';
+    document.getElementById('stake-confirm-check').checked = false;
+    document.getElementById('stake-modal').classList.add('open');
+  }
+
+  function closeStakeModal() {
+    document.getElementById('stake-modal').classList.remove('open');
+  }
+
+  function confirmStake() {
+    if (!document.getElementById('stake-confirm-check').checked) {
+      showToast('Please confirm the terms to continue');
+      return;
+    }
+    closeStakeModal();
+    showToast('Stake submitted · Transaction pending');
+  }
+
+  document.getElementById('stake-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeStakeModal();
+  });
+
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1a1a1a;border:1px solid #2a2a2a;padding:10px 18px;border-radius:14px;display:flex;align-items:center;gap:10px;font-size:13px;z-index:9999;';
+    t.innerHTML = '<i class="fa-solid fa-check-circle" style="color:#4ade80;"></i><span>' + msg + '</span>';
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(()=>t.remove(),300); }, 2400);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Primora • Overview</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; border: 0; }
+    :root { --bg: #0a0a0a; --surface: #111111; --border: #1f1f1f; --accent: #F59E0B; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: #e4e4e7; -webkit-font-smoothing: antialiased; }
+    .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 600; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; }
+    .tabnum { font-variant-numeric: tabular-nums; }
+    .pulse { animation: pulse 2s cubic-bezier(.4,0,.6,1) infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+    .sidebar { width: 256px; border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; background: var(--bg); }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+    .topbar { height: 73px; border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; background: var(--bg); }
+    .content { flex: 1; overflow: auto; padding: 24px; }
+    .inner { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    .logo-area { height: 73px; padding: 0 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    .logo-icon { width: 36px; height: 36px; background: #F59E0B; border-radius: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .nav-area { padding: 12px; flex: 1; }
+    .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 16px; font-size: 14px; font-weight: 500; color: #71717a; border-radius: 10px; text-decoration: none; transition: color .15s, background .15s; }
+    .nav-link:hover { color: #e4e4e7; background: #111; }
+    .nav-link.active { background: #1f1f1f; color: #fff; border-left: 2px solid #F59E0B; padding-left: 14px; }
+    .wallet-area { padding: 16px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 18px; }
+    .kpi-label { font-size: 9px; font-weight: 700; letter-spacing: .08em; color: #52525b; text-transform: uppercase; margin-bottom: 6px; }
+    .kpi-val { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .kpi-sub { font-size: 11px; color: #71717a; margin-top: 4px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .prog-wrap { height: 3px; background: #1f1f1f; border-radius: 2px; overflow: hidden; margin-top: 6px; }
+    .prog-bar { height: 3px; border-radius: 2px; }
+    .comm-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 5px; font-size: 10px; font-weight: 700; }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo-area">
+      <div class="logo-icon"><i class="fa-solid fa-shield-halved" style="color:#0a0a0a;font-size:16px;"></i></div>
+      <span class="font-display" style="font-size:20px;letter-spacing:-.01em;">Primora</span>
+    </div>
+    <div class="nav-area">
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <a href="overview.html" class="nav-link active"><i class="fa-solid fa-chart-line" style="width:16px;color:#F59E0B;"></i><span>Overview</span></a>
+        <a href="mine.html" class="nav-link"><i class="fa-solid fa-microchip" style="width:16px;"></i><span>Mine</span></a>
+        <a href="mymining.html" class="nav-link"><i class="fa-solid fa-user" style="width:16px;"></i><span>My Mining</span></a>
+        <a href="stake.html" class="nav-link"><i class="fa-solid fa-lock" style="width:16px;"></i><span>Stake</span></a>
+        <a href="exchange.html" class="nav-link"><i class="fa-solid fa-exchange-alt" style="width:16px;"></i><span>Exchange</span></a>
+        <a href="sites.html" class="nav-link"><i class="fa-solid fa-globe" style="width:16px;"></i><span>Sites</span></a>
+        <a href="wallet_payouts.html" class="nav-link"><i class="fa-solid fa-wallet" style="width:16px;"></i><span>Wallet &amp; Payouts</span></a>
+        <a href="alerts.html" class="nav-link">
+          <i class="fa-solid fa-bell" style="width:16px;"></i><span>Alerts</span>
+          <span style="margin-left:auto;background:#ef4444;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:99px;line-height:1;">4</span>
+        </a>
+      </div>
+    </div>
+    <div class="wallet-area">
+      <div style="width:32px;height:32px;background:#1f1f1f;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i class="fa-solid fa-user" style="font-size:12px;color:#71717a;"></i>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:500;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">0x71C...9f3A</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+          <span class="pulse" style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;"></span>
+          <span style="font-size:10px;color:#4ade80;">Connected · KYC Full</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="font-display" style="font-size:17px;">Overview</span>
+        <div style="padding:4px 12px;background:#111;border:1px solid #1f1f1f;border-radius:99px;display:flex;align-items:center;gap:8px;">
+          <span class="pulse" style="width:8px;height:8px;border-radius:50%;background:#4ade80;display:inline-block;"></span>
+          <span style="font-size:11px;color:#4ade80;font-weight:500;">Mainnet · Polygon + Ethereum</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="padding:6px 12px;background:#111;border:1px solid #2a2a2a;border-radius:99px;display:flex;align-items:center;gap:8px;max-width:280px;">
+          <i class="fa-solid fa-shield-halved" style="color:#F59E0B;font-size:11px;flex-shrink:0;"></i>
+          <span style="font-size:10px;color:#71717a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">All mining is virtual. No real commodities.</span>
+        </div>
+        <div style="padding:5px 12px;background:#111;border-radius:99px;display:flex;align-items:center;gap:6px;font-size:12px;">
+          <span style="color:#71717a;">KYC:</span><span style="font-weight:600;color:#4ade80;">Full</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="inner">
+
+        <!-- KPI row -->
+        <div class="kpi-grid">
+          <div class="kpi">
+            <div class="kpi-label">Mining Speed</div>
+            <div class="kpi-val" style="color:#4ade80;">3,842</div>
+            <div class="kpi-sub">H/s · Desktop App</div>
+            <div class="prog-wrap"><div class="prog-bar" style="width:78%;background:#4ade80;"></div></div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">PRM Earned (24h)</div>
+            <div class="kpi-val">148.6</div>
+            <div class="kpi-sub" style="color:#F59E0B;">≈ $15.31 net</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Total Staked</div>
+            <div class="kpi-val">10,000</div>
+            <div class="kpi-sub" style="color:#4ade80;">+40% boost · 180d lock</div>
+          </div>
+          <div class="kpi" style="border-color:rgba(245,158,11,.2);">
+            <div class="kpi-label" style="color:#F59E0B;">Entity Share</div>
+            <div class="kpi-val">4.8%</div>
+            <div class="kpi-sub"><a href="#" onclick="showToast('Opening Etherscan...')" style="color:#F59E0B;text-decoration:none;font-size:10px;">On-chain proof →</a></div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Reserve Ratio</div>
+            <div class="kpi-val" style="color:#4ade80;">168%</div>
+            <div class="kpi-sub" style="color:#4ade80;">Healthy · above 150%</div>
+            <div class="prog-wrap"><div class="prog-bar" style="width:100%;background:#4ade80;"></div></div>
+          </div>
+        </div>
+
+        <!-- Active Mining + Commodity breakdown -->
+        <div class="two-col">
+
+          <!-- Active Mining -->
+          <div class="card" style="padding:22px;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;">
+              <div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                  <i class="fa-solid fa-microchip" style="color:#4ade80;font-size:13px;"></i>
+                  <span style="font-size:15px;font-weight:600;">Active Mining</span>
+                  <span style="font-size:9px;padding:2px 6px;background:rgba(34,197,94,.1);color:#4ade80;border-radius:4px;font-weight:700;">LIVE</span>
+                </div>
+                <div style="font-size:12px;color:#4ade80;">Desktop App · 16 threads</div>
+              </div>
+              <div style="text-align:right;">
+                <div class="tabnum font-display" style="font-size:36px;font-weight:700;">3,842</div>
+                <div style="font-size:11px;color:#4ade80;">H/s</div>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;">
+              <div>
+                <div style="font-size:10px;color:#52525b;margin-bottom:3px;">Commodity</div>
+                <div style="font-size:16px;font-weight:700;color:#D4A847;">Gold</div>
+                <div style="font-size:10px;color:#D4A847;margin-top:1px;">XAU · 4.0x diff</div>
+              </div>
+              <div>
+                <div style="font-size:10px;color:#52525b;margin-bottom:3px;">Est. Net Today</div>
+                <div style="font-size:16px;font-weight:700;color:#4ade80;">$15.31</div>
+                <div style="font-size:10px;color:#52525b;margin-top:1px;">after 17% fee</div>
+              </div>
+              <div>
+                <div style="font-size:10px;color:#52525b;margin-bottom:3px;">Staking Boost</div>
+                <div style="font-size:16px;font-weight:700;color:#F59E0B;">+40%</div>
+                <div style="font-size:10px;color:#52525b;margin-top:1px;">Max · 180d lock</div>
+              </div>
+              <div>
+                <div style="font-size:10px;color:#52525b;margin-bottom:3px;">Site</div>
+                <div style="font-size:16px;font-weight:700;">JHB</div>
+                <div style="font-size:10px;color:#52525b;margin-top:1px;">Johannesburg</div>
+              </div>
+            </div>
+
+            <div style="padding-top:14px;border-top:1px solid #1f1f1f;display:flex;align-items:center;justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:8px;font-size:11px;">
+                <span style="color:#4ade80;display:flex;align-items:center;gap:4px;">
+                  <i class="fa-solid fa-circle-check" style="font-size:9px;"></i>Verified clean
+                </span>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button onclick="pauseMining(this)" style="padding:6px 14px;background:#059669;color:#fff;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;">
+                  <i class="fa-solid fa-pause" style="font-size:9px;"></i>Pause
+                </button>
+                <button onclick="showToast('Session restarted')" style="padding:6px 14px;background:#1f1f1f;color:#e4e4e7;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">
+                  Restart
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Commodity Earnings Breakdown -->
+          <div class="card" style="padding:22px;">
+            <div style="font-weight:600;font-size:14px;margin-bottom:16px;">Earnings by Commodity</div>
+            <table style="width:100%;border-collapse:collapse;">
+              <tbody>
+                <tr>
+                  <td style="padding:0 0 10px 0;width:130px;">
+                    <div style="display:flex;align-items:center;gap:7px;">
+                      <span style="font-size:13px;font-weight:700;color:#D4A847;font-family:'Space Grotesk',sans-serif;">Au</span>
+                      <span style="font-size:12px;font-weight:600;">Gold</span>
+                      <span class="comm-tag" style="background:rgba(212,168,71,.1);color:#D4A847;">4.0x</span>
+                    </div>
+                  </td>
+                  <td style="padding:0 0 10px 12px;">
+                    <div class="prog-wrap" style="margin-top:0;"><div class="prog-bar" style="width:44%;background:#D4A847;"></div></div>
+                  </td>
+                  <td style="padding:0 0 10px 12px;text-align:right;white-space:nowrap;width:110px;">
+                    <span style="font-size:13px;font-weight:600;">$8.04</span>
+                    <span style="font-size:10px;color:#52525b;margin-left:4px;">Jun 22</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0;">
+                    <div style="display:flex;align-items:center;gap:7px;">
+                      <span style="font-size:13px;font-weight:700;color:#C8D4DC;font-family:'Space Grotesk',sans-serif;">Pt</span>
+                      <span style="font-size:12px;font-weight:600;">Platinum</span>
+                      <span class="comm-tag" style="background:rgba(200,212,220,.08);color:#C8D4DC;">3.2x</span>
+                    </div>
+                  </td>
+                  <td style="padding:10px 0 10px 12px;">
+                    <div class="prog-wrap" style="margin-top:0;"><div class="prog-bar" style="width:20%;background:#C8D4DC;"></div></div>
+                  </td>
+                  <td style="padding:10px 0 10px 12px;text-align:right;white-space:nowrap;">
+                    <span style="font-size:13px;font-weight:600;">$14.12</span>
+                    <span style="font-size:10px;color:#52525b;margin-left:4px;">Jun 21</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0;">
+                    <div style="display:flex;align-items:center;gap:7px;">
+                      <span style="font-size:13px;font-weight:700;color:#A8B4C0;font-family:'Space Grotesk',sans-serif;">Ag</span>
+                      <span style="font-size:12px;font-weight:600;">Silver</span>
+                      <span class="comm-tag" style="background:rgba(168,180,192,.08);color:#A8B4C0;">2.0x</span>
+                    </div>
+                  </td>
+                  <td style="padding:10px 0 10px 12px;">
+                    <div class="prog-wrap" style="margin-top:0;"><div class="prog-bar" style="width:28%;background:#A8B4C0;"></div></div>
+                  </td>
+                  <td style="padding:10px 0 10px 12px;text-align:right;white-space:nowrap;">
+                    <span style="font-size:13px;font-weight:600;">$13.89</span>
+                    <span style="font-size:10px;color:#52525b;margin-left:4px;">Jun 20</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0 0 0;">
+                    <div style="display:flex;align-items:center;gap:7px;">
+                      <i class="fa-solid fa-droplet" style="font-size:12px;color:#94a3b8;width:13px;"></i>
+                      <span style="font-size:12px;font-weight:600;">Crude Oil</span>
+                      <span class="comm-tag" style="background:rgba(148,163,184,.08);color:#94a3b8;">1.0x</span>
+                    </div>
+                  </td>
+                  <td style="padding:10px 0 0 12px;">
+                    <div class="prog-wrap" style="margin-top:0;"><div class="prog-bar" style="width:8%;background:#94a3b8;"></div></div>
+                  </td>
+                  <td style="padding:10px 0 0 12px;text-align:right;white-space:nowrap;">
+                    <span style="font-size:13px;font-weight:600;">$12.40</span>
+                    <span style="font-size:10px;color:#52525b;margin-left:4px;">Jun 18</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div style="padding-top:12px;border-top:1px solid #1a1a1a;display:flex;justify-content:space-between;font-size:12px;margin-top:10px;">
+              <span style="color:#71717a;">All figures net of 17% platform fee</span>
+              <a href="mymining.html" style="color:#F59E0B;text-decoration:none;font-weight:600;">Full history →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Staking + Oracle + Reserve row -->
+        <div class="three-col">
+
+          <!-- Staking summary -->
+          <div class="card" style="padding:20px;">
+            <div style="font-weight:600;font-size:14px;margin-bottom:14px;">Staking</div>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#71717a;">Polygon</span>
+                <span style="font-weight:600;">0 PRM</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#71717a;">Ethereum · 180d</span>
+                <span style="font-weight:600;">10,000 PRM</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid #1a1a1a;">
+                <span style="color:#71717a;">Effective boost</span>
+                <span style="font-weight:700;color:#F59E0B;">+40% (max)</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#71717a;">Weekly reward</span>
+                <span style="font-weight:600;color:#4ade80;">$4.28 USDC</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#71717a;">Revenue share</span>
+                <span style="font-size:11px;color:#52525b;">20% of platform fees</span>
+              </div>
+            </div>
+            <a href="stake.html" style="display:block;text-align:center;margin-top:14px;padding:8px;background:#1f1f1f;color:#e4e4e7;border-radius:10px;font-size:11px;font-weight:600;text-decoration:none;">Manage Stake</a>
+          </div>
+
+          <!-- Oracle & Network -->
+          <div class="card" style="padding:20px;">
+            <div style="font-weight:600;font-size:14px;margin-bottom:14px;">Oracle &amp; Network</div>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:12px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="color:#71717a;">Active oracle</span>
+                <span style="color:#4ade80;font-weight:600;display:flex;align-items:center;gap:4px;">
+                  <span class="pulse" style="width:5px;height:5px;border-radius:50%;background:#4ade80;display:inline-block;"></span>Chainlink
+                </span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#71717a;">XAU/USD</span><span style="font-family:monospace;font-weight:500;">$3,204.00</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#71717a;">XAG/USD</span><span style="font-family:monospace;font-weight:500;">$31.80</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#71717a;">XPT/USD</span><span style="font-family:monospace;font-weight:500;">$981.00</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#71717a;">WTI/USD</span><span style="font-family:monospace;font-weight:500;">$73.40</span>
+              </div>
+              <div style="padding-top:8px;border-top:1px solid #1a1a1a;display:flex;justify-content:space-between;">
+                <span style="color:#71717a;">Difficulty</span><span style="font-weight:600;">1.84x avg</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:#71717a;">Price ref.</span><span style="font-size:10px;color:#52525b;">TWAP · 5min samples</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reserve Health -->
+          <div class="card" style="padding:20px;">
+            <div style="font-weight:600;font-size:14px;margin-bottom:14px;">Reserve Health</div>
+            <div style="text-align:center;margin-bottom:14px;">
+              <div class="tabnum font-display" style="font-size:40px;font-weight:700;color:#4ade80;">168%</div>
+              <div style="font-size:12px;color:#4ade80;margin-top:4px;">Healthy · above 150%</div>
+            </div>
+            <table style="width:100%;font-size:11px;border-collapse:collapse;">
+              <tr>
+                <td style="padding:3px 0;width:14px;"><span style="color:#4ade80;font-size:8px;">■</span></td>
+                <td style="padding:3px 0;color:#71717a;width:70px;">Above 150%</td>
+                <td style="padding:3px 0;text-align:right;color:#4ade80;font-weight:600;">Healthy</td>
+              </tr>
+              <tr>
+                <td style="padding:3px 0;"><span style="color:#F59E0B;font-size:8px;">■</span></td>
+                <td style="padding:3px 0;color:#71717a;">120-150%</td>
+                <td style="padding:3px 0;text-align:right;color:#52525b;">Caution</td>
+              </tr>
+              <tr>
+                <td style="padding:3px 0;"><span style="color:#f97316;font-size:8px;">■</span></td>
+                <td style="padding:3px 0;color:#71717a;">100-120%</td>
+                <td style="padding:3px 0;text-align:right;color:#52525b;">Stake paused</td>
+              </tr>
+              <tr>
+                <td style="padding:3px 0;"><span style="color:#ef4444;font-size:8px;">■</span></td>
+                <td style="padding:3px 0;color:#71717a;">Below 100%</td>
+                <td style="padding:3px 0;text-align:right;color:#52525b;">All paused</td>
+              </tr>
+            </table>
+            <div style="margin-top:12px;padding-top:10px;border-top:1px solid #1a1a1a;display:flex;justify-content:space-between;font-size:11px;">
+              <span style="color:#71717a;">House edge</span>
+              <span style="font-weight:600;">17% · default</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent payouts -->
+        <div class="card" style="padding:22px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div style="font-weight:600;font-size:14px;">Recent Payouts</div>
+            <a href="wallet_payouts.html" style="font-size:11px;color:#F59E0B;text-decoration:none;font-weight:600;">View all →</a>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead>
+              <tr style="border-bottom:1px solid #1a1a1a;">
+                <th style="text-align:left;padding:6px 0;font-size:9px;font-weight:700;letter-spacing:.06em;color:#52525b;text-transform:uppercase;width:20%;">Date</th>
+                <th style="text-align:left;padding:6px 0;font-size:9px;font-weight:700;letter-spacing:.06em;color:#52525b;text-transform:uppercase;width:18%;">Commodity</th>
+                <th style="text-align:left;padding:6px 0;font-size:9px;font-weight:700;letter-spacing:.06em;color:#52525b;text-transform:uppercase;width:14%;">Chain</th>
+                <th style="text-align:right;padding:6px 0;font-size:9px;font-weight:700;letter-spacing:.06em;color:#52525b;text-transform:uppercase;width:16%;">PRM</th>
+                <th style="text-align:right;padding:6px 0;font-size:9px;font-weight:700;letter-spacing:.06em;color:#52525b;text-transform:uppercase;width:16%;">Net USDC</th>
+                <th style="text-align:right;padding:6px 0;font-size:9px;font-weight:700;letter-spacing:.06em;color:#52525b;text-transform:uppercase;">Tx</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid #141414;">
+                <td style="padding:10px 0;color:#71717a;">Jun 21</td>
+                <td style="padding:10px 0;"><span style="font-size:10px;padding:2px 6px;background:rgba(212,168,71,.1);color:#D4A847;border-radius:4px;font-weight:700;">Au · Gold</span></td>
+                <td style="padding:10px 0;"><span style="font-size:10px;padding:2px 6px;background:rgba(123,63,228,.1);color:#9B6FEA;border-radius:4px;font-weight:700;">Polygon</span></td>
+                <td style="padding:10px 0;text-align:right;font-family:monospace;font-weight:600;">118.2</td>
+                <td style="padding:10px 0;text-align:right;font-weight:700;color:#4ade80;">$15.23</td>
+                <td style="padding:10px 0;text-align:right;"><a href="#" onclick="showToast('Opening explorer...')" style="color:#F59E0B;text-decoration:none;font-family:monospace;font-size:10px;">0x9c4b...</a></td>
+              </tr>
+              <tr style="border-bottom:1px solid #141414;">
+                <td style="padding:10px 0;color:#71717a;">Jun 20</td>
+                <td style="padding:10px 0;"><span style="font-size:10px;padding:2px 6px;background:rgba(168,180,192,.08);color:#A8B4C0;border-radius:4px;font-weight:700;">Ag · Silver</span></td>
+                <td style="padding:10px 0;"><span style="font-size:10px;padding:2px 6px;background:rgba(123,63,228,.1);color:#9B6FEA;border-radius:4px;font-weight:700;">Polygon</span></td>
+                <td style="padding:10px 0;text-align:right;font-family:monospace;font-weight:600;">148.6</td>
+                <td style="padding:10px 0;text-align:right;font-weight:700;color:#4ade80;">$13.89</td>
+                <td style="padding:10px 0;text-align:right;"><a href="#" onclick="showToast('Opening explorer...')" style="color:#F59E0B;text-decoration:none;font-family:monospace;font-size:10px;">0x7e2a...</a></td>
+              </tr>
+              <tr>
+                <td style="padding:10px 0;color:#71717a;">Jun 19</td>
+                <td style="padding:10px 0;"><span style="font-size:10px;padding:2px 6px;background:rgba(200,212,220,.08);color:#C8D4DC;border-radius:4px;font-weight:700;">Pt · Platinum</span></td>
+                <td style="padding:10px 0;"><span style="font-size:10px;padding:2px 6px;background:rgba(98,126,234,.1);color:#8299EE;border-radius:4px;font-weight:700;">Ethereum</span></td>
+                <td style="padding:10px 0;text-align:right;font-family:monospace;font-weight:600;">98.4</td>
+                <td style="padding:10px 0;text-align:right;font-weight:700;color:#4ade80;">$14.12</td>
+                <td style="padding:10px 0;text-align:right;"><a href="#" onclick="showToast('Opening explorer...')" style="color:#F59E0B;text-decoration:none;font-family:monospace;font-size:10px;">0x3d8f...</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mining sites -->
+        <div class="card" style="padding:22px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div style="font-weight:600;font-size:14px;">Mining Sites</div>
+            <div style="font-size:11px;color:#52525b;">Auto-routed by commodity · 6/6 online</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+            <div style="background:#0d0d0f;border:1px solid rgba(245,158,11,.2);border-radius:14px;padding:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span style="font-size:13px;font-weight:600;">Johannesburg</span>
+                <span class="pulse" style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;"></span>
+              </div>
+              <div style="font-size:10px;color:#71717a;margin-bottom:4px;">South Africa · Vultr</div>
+              <div style="font-size:10px;"><span style="color:#D4A847;">Au</span> · <span style="color:#C8D4DC;">Pt</span></div>
+              <div style="font-size:10px;color:#F59E0B;margin-top:4px;font-weight:600;">Your active site</div>
+            </div>
+            <div style="background:#0d0d0f;border:1px solid #1a1a1a;border-radius:14px;padding:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span style="font-size:13px;font-weight:600;">Amsterdam</span>
+                <span class="pulse" style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;"></span>
+              </div>
+              <div style="font-size:10px;color:#71717a;margin-bottom:4px;">Netherlands · DigitalOcean</div>
+              <div style="font-size:10px;"><span style="color:#A8B4C0;">Ag</span></div>
+            </div>
+            <div style="background:#0d0d0f;border:1px solid #1a1a1a;border-radius:14px;padding:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span style="font-size:13px;font-weight:600;">Dallas</span>
+                <span class="pulse" style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;"></span>
+              </div>
+              <div style="font-size:10px;color:#71717a;margin-bottom:4px;">United States · Akamai</div>
+              <div style="font-size:10px;"><span style="color:#94a3b8;">WTI</span></div>
+            </div>
+            <div style="background:#0d0d0f;border:1px solid #1a1a1a;border-radius:14px;padding:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span style="font-size:13px;font-weight:600;">Toronto</span>
+                <span class="pulse" style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;"></span>
+              </div>
+              <div style="font-size:10px;color:#71717a;margin-bottom:4px;">Canada · Vultr</div>
+              <div style="font-size:10px;"><span style="color:#D4A847;">Au</span></div>
+            </div>
+            <div style="background:#0d0d0f;border:1px solid #1a1a1a;border-radius:14px;padding:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span style="font-size:13px;font-weight:600;">Warsaw</span>
+                <span class="pulse" style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;"></span>
+              </div>
+              <div style="font-size:10px;color:#71717a;margin-bottom:4px;">Poland · Vultr</div>
+              <div style="font-size:10px;"><span style="color:#A8B4C0;">Ag</span></div>
+            </div>
+            <div style="background:#0d0d0f;border:1px solid #1a1a1a;border-radius:14px;padding:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span style="font-size:13px;font-weight:600;">Dubai</span>
+                <span class="pulse" style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;"></span>
+              </div>
+              <div style="font-size:10px;color:#71717a;margin-bottom:4px;">UAE · Vultr</div>
+              <div style="font-size:10px;"><span style="color:#94a3b8;">WTI</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function pauseMining(btn) {
+    if (btn.innerHTML.includes('Pause')) {
+      btn.innerHTML = '<i class="fa-solid fa-play" style="font-size:9px;"></i>Resume';
+      btn.style.background = '#3f3f46';
+    } else {
+      btn.innerHTML = '<i class="fa-solid fa-pause" style="font-size:9px;"></i>Pause';
+      btn.style.background = '#059669';
+    }
+  }
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1a1a1a;border:1px solid #2a2a2a;padding:10px 18px;border-radius:14px;display:flex;align-items:center;gap:10px;font-size:13px;z-index:9999;';
+    t.innerHTML = '<i class="fa-solid fa-check-circle" style="color:#4ade80;"></i><span>' + msg + '</span>';
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(()=>t.remove(),300); }, 2400);
+  }
+</script>
+</body>
+</html>

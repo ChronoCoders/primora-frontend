@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Primora • Mine</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; border: 0; }
+    :root { --accent: #F59E0B; --bg: #0a0a0a; --surface: #111111; --border: #1f1f1f; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: #e4e4e7; -webkit-font-smoothing: antialiased; }
+    .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; font-weight: 600; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; }
+    .tabnum { font-variant-numeric: tabular-nums; }
+    .nav-active { background: #1f1f1f; color: #fff; border-left: 2px solid #F59E0B; padding-left: calc(1rem - 2px); }
+    .pulse { animation: pulse 2s cubic-bezier(.4,0,.6,1) infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
+
+    /* Layout */
+    .layout { display: flex; height: 100vh; overflow: hidden; }
+    .sidebar { width: 256px; border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; background: var(--bg); }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+    .topbar { height: 73px; border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; background: var(--bg); }
+    .content { flex: 1; overflow: auto; padding: 24px; }
+    .inner { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+    /* Sidebar */
+    .logo-area { height: 73px; padding: 0 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    .logo-icon { width: 36px; height: 36px; background: #F59E0B; border-radius: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .nav-area { padding: 12px; flex: 1; }
+    .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 16px; font-size: 14px; font-weight: 500; color: #71717a; border-radius: 10px; text-decoration: none; transition: color .15s, background .15s; }
+    .nav-link:hover { color: #e4e4e7; background: #111; }
+    .nav-link.active { background: #1f1f1f; color: #fff; border-left: 2px solid #F59E0B; padding-left: 14px; }
+    .wallet-area { padding: 16px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+
+    /* Commodity selector */
+    .comm-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .comm-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; cursor: pointer; transition: border-color .2s; }
+    .comm-card:hover { border-color: #3f3f46; }
+    .comm-card.selected { border-color: #F59E0B; background: rgba(245,158,11,.04); }
+    .comm-symbol { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+    .comm-name { font-size: 13px; font-weight: 600; color: #e4e4e7; margin-bottom: 2px; }
+    .comm-diff { font-size: 11px; color: #71717a; }
+    .comm-est { font-size: 11px; color: #4ade80; margin-top: 6px; }
+
+    /* Difficulty bar */
+    .diff-bar-wrap { height: 4px; background: #1f1f1f; border-radius: 2px; margin-top: 8px; overflow: hidden; }
+    .diff-bar { height: 4px; border-radius: 2px; }
+
+    /* Client cards */
+    .client-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: stretch; }
+    .client-card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 20px; display: flex; flex-direction: column; }
+
+    /* Status pill */
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+    .pill-green { background: rgba(34,197,94,.1); color: #4ade80; }
+    .pill-amber { background: rgba(245,158,11,.1); color: #F59E0B; }
+    .pill-zinc { background: #1f1f1f; color: #71717a; }
+
+    /* Net earnings box */
+    .net-box { background: rgba(34,197,94,.04); border: 1px solid rgba(34,197,94,.12); border-radius: 16px; padding: 16px; }
+
+    /* Confirm modal */
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(6px); z-index: 50; align-items: center; justify-content: center; }
+    .modal-bg.open { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 28px; width: 100%; max-width: 420px; margin: 16px; }
+
+    /* Buttons */
+    .btn-primary { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; background: #F59E0B; color: #0a0a0a; font-weight: 700; font-size: 13px; border-radius: 12px; cursor: pointer; transition: background .15s; border: none; font-family: inherit; }
+    .btn-primary:hover { background: #FCD34D; }
+    .btn-ghost { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; background: #1f1f1f; color: #e4e4e7; font-weight: 600; font-size: 13px; border-radius: 12px; cursor: pointer; transition: background .15s; border: none; font-family: inherit; }
+    .btn-ghost:hover { background: #2a2a2a; }
+    .btn-danger { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: rgba(239,68,68,.15); color: #f87171; font-weight: 600; font-size: 12px; border-radius: 10px; cursor: pointer; transition: background .15s; border: none; font-family: inherit; }
+    .btn-danger:hover { background: rgba(239,68,68,.25); }
+
+    /* Site badge */
+    .site-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #111; border: 1px solid #2a2a2a; border-radius: 10px; font-size: 12px; }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo-area">
+      <div class="logo-icon"><i class="fa-solid fa-shield-halved" style="color:#0a0a0a;font-size:16px;"></i></div>
+      <span class="font-display" style="font-size:20px;letter-spacing:-.01em;">Primora</span>
+    </div>
+    <div class="nav-area">
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <a href="overview.html" class="nav-link"><i class="fa-solid fa-chart-line" style="width:16px;"></i><span>Overview</span></a>
+        <a href="mine.html" class="nav-link active">
+          <i class="fa-solid fa-microchip" style="width:16px;color:#F59E0B;"></i><span>Mine</span>
+          <span class="pulse" style="width:8px;height:8px;border-radius:50%;background:#4ade80;margin-left:auto;display:inline-block;"></span>
+        </a>
+        <a href="mymining.html" class="nav-link"><i class="fa-solid fa-user" style="width:16px;"></i><span>My Mining</span></a>
+        <a href="stake.html" class="nav-link"><i class="fa-solid fa-lock" style="width:16px;"></i><span>Stake</span></a>
+        <a href="exchange.html" class="nav-link"><i class="fa-solid fa-exchange-alt" style="width:16px;"></i><span>Exchange</span></a>
+        <a href="sites.html" class="nav-link"><i class="fa-solid fa-globe" style="width:16px;"></i><span>Sites</span></a>
+        <a href="wallet_payouts.html" class="nav-link"><i class="fa-solid fa-wallet" style="width:16px;"></i><span>Wallet &amp; Payouts</span></a>
+        <a href="alerts.html" class="nav-link">
+          <i class="fa-solid fa-bell" style="width:16px;"></i><span>Alerts</span>
+          <span style="margin-left:auto;background:#ef4444;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:99px;line-height:1;">4</span>
+        </a>
+      </div>
+    </div>
+    <div class="wallet-area">
+      <div style="width:32px;height:32px;background:#1f1f1f;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i class="fa-solid fa-user" style="font-size:12px;color:#71717a;"></i>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:500;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">0x71C...9f3A</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+          <span class="pulse" style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;"></span>
+          <span style="font-size:10px;color:#4ade80;">Connected · KYC Full</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="font-display" style="font-size:17px;">Mine</span>
+        <div style="padding:4px 12px;background:#111;border:1px solid #1f1f1f;border-radius:99px;display:flex;align-items:center;gap:8px;">
+          <span class="pulse" style="width:8px;height:8px;border-radius:50%;background:#4ade80;display:inline-block;"></span>
+          <span style="font-size:11px;color:#4ade80;font-weight:500;">Mainnet · Polygon + Ethereum</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="padding:6px 12px;background:#111;border:1px solid #2a2a2a;border-radius:99px;display:flex;align-items:center;gap:8px;max-width:280px;">
+          <i class="fa-solid fa-shield-halved" style="color:#F59E0B;font-size:11px;flex-shrink:0;"></i>
+          <span style="font-size:10px;color:#71717a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">All mining is virtual. No real commodities.</span>
+        </div>
+        <div style="padding:5px 12px;background:#111;border-radius:99px;display:flex;align-items:center;gap:6px;font-size:12px;">
+          <span style="color:#71717a;">KYC:</span>
+          <span style="font-weight:600;color:#4ade80;">Full</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="inner">
+
+        <!-- Page header -->
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+          <div>
+            <h1 class="font-display" style="font-size:22px;letter-spacing:-.01em;">Mine</h1>
+            <p style="font-size:13px;color:#71717a;margin-top:4px;">Select a commodity, then start your session. Your CPU does the work.</p>
+          </div>
+          <div id="active-session-badge" style="display:none;">
+            <span class="pill pill-green"><span class="pulse" style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;"></span>Session active</span>
+          </div>
+        </div>
+
+        <!-- STEP 1: Commodity Selector -->
+        <div class="card" style="padding:24px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div>
+              <div style="font-size:11px;font-weight:700;letter-spacing:.06em;color:#71717a;text-transform:uppercase;margin-bottom:4px;">Step 1</div>
+              <div style="font-weight:600;font-size:15px;">Select your commodity</div>
+            </div>
+            <div id="selected-label" style="display:none;">
+              <span style="font-size:12px;color:#F59E0B;font-weight:600;" id="selected-comm-name">Gold selected</span>
+            </div>
+          </div>
+
+          <div class="comm-grid">
+            <!-- Gold -->
+            <div class="comm-card selected" onclick="selectCommodity(this,'gold','Gold','XAU','4.0x','Hard','#D4A847','$18 - $22')" id="comm-gold">
+              <div class="comm-symbol" style="color:#D4A847;">Au</div>
+              <div class="comm-name">Gold</div>
+              <div class="comm-diff">Difficulty: 4.0x</div>
+              <div class="diff-bar-wrap"><div class="diff-bar" style="width:100%;background:#D4A847;"></div></div>
+              <div class="comm-est">Est. net: $15-18 / day</div>
+            </div>
+            <!-- Platinum -->
+            <div class="comm-card" onclick="selectCommodity(this,'platinum','Platinum','XPT','3.2x','Hard','#C8D4DC','$14-17')" id="comm-platinum">
+              <div class="comm-symbol" style="color:#C8D4DC;">Pt</div>
+              <div class="comm-name">Platinum</div>
+              <div class="comm-diff">Difficulty: 3.2x</div>
+              <div class="diff-bar-wrap"><div class="diff-bar" style="width:80%;background:#C8D4DC;"></div></div>
+              <div class="comm-est">Est. net: $14-17 / day</div>
+            </div>
+            <!-- Silver -->
+            <div class="comm-card" onclick="selectCommodity(this,'silver','Silver','XAG','2.0x','Medium','#A8B4C0','$13-16')" id="comm-silver">
+              <div class="comm-symbol" style="color:#A8B4C0;">Ag</div>
+              <div class="comm-name">Silver</div>
+              <div class="comm-diff">Difficulty: 2.0x</div>
+              <div class="diff-bar-wrap"><div class="diff-bar" style="width:50%;background:#A8B4C0;"></div></div>
+              <div class="comm-est">Est. net: $13-16 / day</div>
+            </div>
+            <!-- Oil -->
+            <div class="comm-card" onclick="selectCommodity(this,'oil','Crude Oil','WTI','1.0x','Low','#94a3b8','$12-15')" id="comm-oil">
+              <div style="font-size:24px;font-weight:700;line-height:1;margin-bottom:6px;color:#94a3b8;">
+                <i class="fa-solid fa-droplet"></i>
+              </div>
+              <div class="comm-name">Crude Oil</div>
+              <div class="comm-diff">Difficulty: 1.0x</div>
+              <div class="diff-bar-wrap"><div class="diff-bar" style="width:25%;background:#94a3b8;"></div></div>
+              <div class="comm-est">Est. net: $12-15 / day</div>
+            </div>
+          </div>
+
+          <div style="margin-top:16px;padding:12px 14px;background:rgba(245,158,11,.04);border:1px solid rgba(245,158,11,.1);border-radius:12px;font-size:11px;color:#71717a;">
+            All estimates are net of the 17% platform fee, based on average CPU performance over 8 hours. Actual earnings depend on your hardware, session length, and live commodity prices.
+          </div>
+        </div>
+
+        <!-- STEP 2: Site Assignment -->
+        <div class="card" style="padding:24px;" id="site-step">
+          <div style="margin-bottom:16px;">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.06em;color:#71717a;text-transform:uppercase;margin-bottom:4px;">Step 2</div>
+            <div style="font-weight:600;font-size:15px;">Assigned site</div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:16px;">
+              <div style="width:44px;height:44px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:14px;display:flex;align-items:center;justify-content:center;">
+                <i class="fa-solid fa-server" style="color:#F59E0B;font-size:16px;"></i>
+              </div>
+              <div>
+                <div style="font-weight:600;font-size:15px;" id="site-name">Johannesburg</div>
+                <div style="font-size:12px;color:#71717a;margin-top:2px;" id="site-detail">South Africa · Vultr · Gold + Platinum</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="pulse" style="width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;"></span>
+              <span style="font-size:12px;color:#4ade80;font-weight:500;">Online · 99.8% uptime</span>
+            </div>
+          </div>
+          <div style="margin-top:12px;font-size:11px;color:#52525b;display:flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-location-dot" style="font-size:10px;"></i>
+            Routed automatically based on your location and site load. You cannot select a site manually.
+          </div>
+        </div>
+
+        <!-- STEP 3: Active session OR start -->
+        <div id="start-panel">
+          <div class="card" style="padding:24px;">
+            <div style="margin-bottom:16px;">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.06em;color:#71717a;text-transform:uppercase;margin-bottom:4px;">Step 3</div>
+              <div style="font-weight:600;font-size:15px;">Start session</div>
+            </div>
+
+            <!-- Net earnings preview -->
+            <div class="net-box" style="margin-bottom:20px;">
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+                <div>
+                  <div style="font-size:10px;font-weight:700;letter-spacing:.06em;color:#52525b;text-transform:uppercase;margin-bottom:4px;">Commodity</div>
+                  <div style="font-size:16px;font-weight:700;color:#D4A847;" id="preview-comm">Gold (XAU)</div>
+                </div>
+                <div>
+                  <div style="font-size:10px;font-weight:700;letter-spacing:.06em;color:#52525b;text-transform:uppercase;margin-bottom:4px;">Difficulty</div>
+                  <div style="font-size:16px;font-weight:700;" id="preview-diff">4.0x</div>
+                </div>
+                <div>
+                  <div style="font-size:10px;font-weight:700;letter-spacing:.06em;color:#52525b;text-transform:uppercase;margin-bottom:4px;">Est. Net / Day</div>
+                  <div style="font-size:16px;font-weight:700;color:#4ade80;" id="preview-earn">$15 - $18</div>
+                </div>
+              </div>
+              <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(34,197,94,.1);font-size:11px;color:#52525b;">
+                Earnings shown are after the 17% platform fee. Price used: live <span id="preview-ticker">XAU/USD</span> TWAP over your session.
+              </div>
+            </div>
+
+            <!-- Client selection -->
+            <div style="margin-bottom:20px;">
+              <div style="font-size:12px;font-weight:600;color:#71717a;margin-bottom:10px;">Mining client</div>
+              <div class="client-grid">
+                <div class="client-card" id="client-browser" style="opacity:.6;">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                    <div style="font-weight:600;font-size:13px;">Browser</div>
+                    <span style="font-size:10px;padding:2px 6px;background:#1f1f1f;color:#71717a;border-radius:6px;font-family:monospace;white-space:nowrap;">100-400 H/s</span>
+                  </div>
+                  <div style="font-size:11px;color:#52525b;flex:1;">No download. Lower earnings.</div>
+                  <button onclick="selectClient('browser',this)" style="width:100%;margin-top:12px;padding:8px;background:#1f1f1f;color:#e4e4e7;border-radius:10px;font-size:11px;cursor:pointer;font-family:inherit;border:none;">Select</button>
+                </div>
+                <div class="client-card" id="client-desktop" style="border-color:rgba(34,197,94,.2);background:rgba(34,197,94,.02);">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+                    <div style="font-weight:600;font-size:13px;">Desktop App</div>
+                    <span style="font-size:10px;padding:2px 6px;background:rgba(34,197,94,.1);color:#4ade80;border-radius:6px;font-family:monospace;white-space:nowrap;">1,000-4,000 H/s</span>
+                  </div>
+                  <div style="font-size:9px;padding:2px 7px;background:rgba(34,197,94,.1);color:#4ade80;border-radius:4px;font-weight:700;display:inline-block;margin-bottom:6px;">RECOMMENDED</div>
+                  <div style="font-size:11px;color:#4ade80;flex:1;display:flex;align-items:center;gap:6px;">
+                    <span class="pulse" style="width:5px;height:5px;border-radius:50%;background:#4ade80;display:inline-block;"></span>Currently running
+                  </div>
+                  <button onclick="selectClient('desktop',this)" style="width:100%;margin-top:12px;padding:8px;background:#4ade80;color:#0a0a0a;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;border:none;">Selected</button>
+                </div>
+                <div class="client-card">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                    <div style="font-weight:600;font-size:13px;">CLI</div>
+                    <span style="font-size:10px;padding:2px 6px;background:#1f1f1f;color:#71717a;border-radius:6px;font-family:monospace;white-space:nowrap;">1,200-5,000 H/s</span>
+                  </div>
+                  <div style="font-size:11px;color:#52525b;flex:1;">Maximum earnings. Advanced users.</div>
+                  <button onclick="selectClient('cli',this)" style="width:100%;margin-top:12px;padding:8px;background:#1f1f1f;color:#e4e4e7;border-radius:10px;font-size:11px;cursor:pointer;font-family:inherit;border:none;">Select</button>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn-primary" onclick="openConfirm()" style="width:100%;justify-content:center;padding:14px;">
+              <i class="fa-solid fa-bolt" style="font-size:12px;"></i>
+              Start Session
+            </button>
+          </div>
+        </div>
+
+        <!-- Active session panel (shown when mining) -->
+        <div id="active-panel" style="display:none;">
+          <div class="card" style="padding:24px;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;">
+              <div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                  <i class="fa-solid fa-microchip" style="color:#4ade80;font-size:14px;"></i>
+                  <span style="font-size:17px;font-weight:600;">Session Active</span>
+                  <span class="pill pill-green"><span class="pulse" style="width:5px;height:5px;border-radius:50%;background:#4ade80;display:inline-block;"></span>LIVE</span>
+                </div>
+                <div style="font-size:12px;color:#4ade80;" id="active-client-label">Desktop App · 16 threads</div>
+              </div>
+              <div style="text-align:right;">
+                <div class="tabnum font-display" style="font-size:40px;font-weight:700;">3,842</div>
+                <div style="font-size:12px;color:#4ade80;">H/s</div>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;">
+              <div>
+                <div style="font-size:10px;color:#52525b;margin-bottom:4px;">Commodity</div>
+                <div style="font-size:18px;font-weight:700;" id="active-comm-display">Gold</div>
+                <div style="font-size:11px;color:#D4A847;margin-top:2px;" id="active-ticker-display">XAU/USD</div>
+              </div>
+              <div>
+                <div style="font-size:10px;color:#52525b;margin-bottom:4px;">Est. Net Today</div>
+                <div style="font-size:18px;font-weight:700;color:#4ade80;" id="active-earn-display">$15.31</div>
+                <div style="font-size:11px;color:#52525b;margin-top:2px;">after 17% fee</div>
+              </div>
+              <div>
+                <div style="font-size:10px;color:#52525b;margin-bottom:4px;">Staking Boost</div>
+                <div style="font-size:18px;font-weight:700;color:#F59E0B;">+25%</div>
+                <div style="font-size:11px;color:#52525b;margin-top:2px;">10,000 PRM staked</div>
+              </div>
+              <div>
+                <div style="font-size:10px;color:#52525b;margin-bottom:4px;">Session Time</div>
+                <div class="tabnum" style="font-size:18px;font-weight:700;" id="session-timer">00:00:00</div>
+                <div style="font-size:11px;color:#52525b;margin-top:2px;">Running</div>
+              </div>
+            </div>
+
+            <div style="padding-top:16px;border-top:1px solid #1f1f1f;display:flex;align-items:center;justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:10px;font-size:12px;">
+                <span style="color:#4ade80;display:flex;align-items:center;gap:5px;">
+                  <i class="fa-solid fa-circle-check" style="font-size:10px;"></i>Verified clean
+                </span>
+                <span style="color:#3f3f46;">·</span>
+                <span style="color:#52525b;" id="active-site-label">Johannesburg node</span>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button onclick="pauseSession(this)" class="btn-ghost" style="padding:8px 16px;font-size:12px;">
+                  <i class="fa-solid fa-pause"></i> Pause
+                </button>
+                <button onclick="stopSession()" class="btn-danger">
+                  <i class="fa-solid fa-stop"></i> End Session
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-bg" id="confirm-modal">
+  <div class="modal">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <div style="width:40px;height:40px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i class="fa-solid fa-bolt" style="color:#F59E0B;font-size:15px;"></i>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:15px;">Confirm session</div>
+        <div style="font-size:12px;color:#71717a;margin-top:2px;">Review before starting</div>
+      </div>
+    </div>
+
+    <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:14px;padding:16px;margin-bottom:16px;display:flex;flex-direction:column;gap:10px;font-size:13px;">
+      <div style="display:flex;justify-content:space-between;"><span style="color:#71717a;">Commodity</span><span style="font-weight:600;" id="modal-comm">Gold (XAU)</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:#71717a;">Difficulty</span><span style="font-weight:600;" id="modal-diff">4.0x</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:#71717a;">Client</span><span style="font-weight:600;" id="modal-client">Desktop App</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:#71717a;">Site</span><span style="font-weight:600;" id="modal-site">Johannesburg</span></div>
+      <div style="border-top:1px solid #1f1f1f;padding-top:10px;display:flex;justify-content:space-between;">
+        <span style="color:#71717a;">Est. net earnings / day</span>
+        <span style="font-weight:700;color:#4ade80;" id="modal-earn">$15 - $18</span>
+      </div>
+      <div style="font-size:11px;color:#52525b;">Platform fee (17%) already deducted from estimate above. Gross earnings are not shown.</div>
+    </div>
+
+    <div style="background:rgba(245,158,11,.04);border:1px solid rgba(245,158,11,.1);border-radius:12px;padding:12px;margin-bottom:20px;font-size:11px;color:#71717a;line-height:1.6;">
+      All mining on Primora is virtual. No real commodities are mined, extracted, or delivered. Commodity prices are external references only. Payouts are not guaranteed and depend on network conditions.
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <button class="btn-ghost" onclick="closeConfirm()" style="width:100%;justify-content:center;">Cancel</button>
+      <button class="btn-primary" onclick="startSession()" style="width:100%;justify-content:center;">
+        <i class="fa-solid fa-bolt" style="font-size:11px;"></i> Start Now
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let selectedCommodity = { id:'gold', name:'Gold', ticker:'XAU', diff:'4.0x', color:'#D4A847', earn:'$15 - $18', site:'Johannesburg', siteDetail:'South Africa · Vultr · Gold + Platinum' };
+  let selectedClient = 'desktop';
+  let sessionActive = false;
+  let sessionSeconds = 0;
+  let timerInterval = null;
+
+  const siteMap = {
+    gold: { name:'Johannesburg', detail:'South Africa · Vultr · Gold + Platinum' },
+    platinum: { name:'Johannesburg', detail:'South Africa · Vultr · Gold + Platinum' },
+    silver: { name:'Amsterdam', detail:'Netherlands · DigitalOcean · Silver' },
+    oil: { name:'Dallas', detail:'United States · Akamai · Crude Oil' }
+  };
+
+  const earnMap = {
+    gold: '$15 - $18', platinum: '$14 - $17', silver: '$13 - $16', oil: '$12 - $15'
+  };
+
+  const tickerMap = {
+    gold: 'XAU/USD', platinum: 'XPT/USD', silver: 'XAG/USD', oil: 'WTI/USD'
+  };
+
+  function selectCommodity(el, id, name, ticker, diff, diffLabel, color, earn) {
+    document.querySelectorAll('.comm-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    const site = siteMap[id];
+    const netEarn = earnMap[id];
+    selectedCommodity = { id, name, ticker, diff, color, earn: netEarn, site: site.name, siteDetail: site.detail };
+    document.getElementById('selected-label').style.display = 'block';
+    document.getElementById('selected-comm-name').textContent = name + ' selected';
+    document.getElementById('site-name').textContent = site.name;
+    document.getElementById('site-detail').textContent = site.detail;
+    document.getElementById('preview-comm').textContent = name + ' (' + ticker + ')';
+    document.getElementById('preview-comm').style.color = color;
+    document.getElementById('preview-diff').textContent = diff;
+    document.getElementById('preview-earn').textContent = netEarn;
+    document.getElementById('preview-ticker').textContent = tickerMap[id];
+    updateModal();
+  }
+
+  function selectClient(type, btn) {
+    selectedClient = type;
+    ['browser','desktop','cli'].forEach(c => {
+      const b = document.getElementById('client-' + c);
+      const btn2 = b.querySelector('button');
+      if (c === type) {
+        b.style.borderColor = 'rgba(34,197,94,.2)';
+        b.style.background = 'rgba(34,197,94,.02)';
+        btn2.style.background = '#4ade80';
+        btn2.style.color = '#0a0a0a';
+        btn2.style.fontWeight = '700';
+        btn2.textContent = 'Selected';
+      } else {
+        b.style.borderColor = '';
+        b.style.background = '';
+        btn2.style.background = '#1f1f1f';
+        btn2.style.color = '#e4e4e7';
+        btn2.style.fontWeight = '';
+        btn2.textContent = 'Select';
+      }
+    });
+    updateModal();
+  }
+
+  function updateModal() {
+    const clientNames = { browser:'Browser', desktop:'Desktop App', cli:'CLI' };
+    document.getElementById('modal-comm').textContent = selectedCommodity.name + ' (' + selectedCommodity.ticker + ')';
+    document.getElementById('modal-diff').textContent = selectedCommodity.diff;
+    document.getElementById('modal-client').textContent = clientNames[selectedClient];
+    document.getElementById('modal-site').textContent = selectedCommodity.site;
+    document.getElementById('modal-earn').textContent = selectedCommodity.earn;
+  }
+
+  function openConfirm() { updateModal(); document.getElementById('confirm-modal').classList.add('open'); }
+  function closeConfirm() { document.getElementById('confirm-modal').classList.remove('open'); }
+
+  function startSession() {
+    closeConfirm();
+    sessionActive = true;
+    sessionSeconds = 0;
+    document.getElementById('start-panel').style.display = 'none';
+    document.getElementById('active-panel').style.display = 'block';
+    document.getElementById('active-session-badge').style.display = 'flex';
+    const clientNames = { browser:'Browser · WASM', desktop:'Desktop App · 16 threads', cli:'CLI · native' };
+    document.getElementById('active-client-label').textContent = clientNames[selectedClient];
+    document.getElementById('active-comm-display').textContent = selectedCommodity.name;
+    document.getElementById('active-comm-display').style.color = selectedCommodity.color;
+    document.getElementById('active-ticker-display').textContent = selectedCommodity.ticker + '/USD';
+    document.getElementById('active-earn-display').textContent = selectedCommodity.earn.split(' - ')[0];
+    document.getElementById('active-site-label').textContent = selectedCommodity.site + ' node';
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      sessionSeconds++;
+      const h = String(Math.floor(sessionSeconds/3600)).padStart(2,'0');
+      const m = String(Math.floor((sessionSeconds%3600)/60)).padStart(2,'0');
+      const s = String(sessionSeconds%60).padStart(2,'0');
+      document.getElementById('session-timer').textContent = h+':'+m+':'+s;
+    }, 1000);
+    showToast('Session started · ' + selectedCommodity.name + ' · ' + selectedCommodity.site);
+  }
+
+  function pauseSession(btn) {
+    if (btn.innerHTML.includes('Pause')) {
+      btn.innerHTML = '<i class="fa-solid fa-play"></i> Resume';
+      clearInterval(timerInterval);
+      timerInterval = null;
+    } else {
+      btn.innerHTML = '<i class="fa-solid fa-pause"></i> Pause';
+      timerInterval = setInterval(() => {
+        sessionSeconds++;
+        const h = String(Math.floor(sessionSeconds/3600)).padStart(2,'0');
+        const m = String(Math.floor((sessionSeconds%3600)/60)).padStart(2,'0');
+        const s = String(sessionSeconds%60).padStart(2,'0');
+        document.getElementById('session-timer').textContent = h+':'+m+':'+s;
+      }, 1000);
+    }
+  }
+
+  function stopSession() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    sessionActive = false;
+    document.getElementById('active-panel').style.display = 'none';
+    document.getElementById('start-panel').style.display = 'block';
+    document.getElementById('active-session-badge').style.display = 'none';
+    showToast('Session ended · PRM earned sent to wallet');
+  }
+
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1a1a1a;border:1px solid #2a2a2a;padding:10px 18px;border-radius:14px;display:flex;align-items:center;gap:10px;font-size:13px;z-index:9999;';
+    t.innerHTML = '<i class="fa-solid fa-check-circle" style="color:#4ade80;"></i><span>' + msg + '</span>';
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.transition = 'opacity .3s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2400);
+  }
+
+  document.getElementById('confirm-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeConfirm();
+  });
+
+  updateModal();
+</script>
+</body>
+</html>

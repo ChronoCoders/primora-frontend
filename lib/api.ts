@@ -1,11 +1,3 @@
-// Typed client for the Primora backend read endpoints. All requests go to
-// /api/... so the Next.js rewrite (and Cloudflare in prod) keeps them
-// same-origin. Plain fetch, no extra dependencies; intended for client-side use.
-//
-// Shapes mirror the backend serde structs exactly. Monetary fields
-// (`gross_prm`, `total_gross_prm`) are decimal strings (NUMERIC(78,0)) and stay
-// strings end to end -- never coerce to number. Timestamps are ISO 8601 strings.
-
 /// A payout (mint proposal) row for a wallet, from GET /wallets/:wallet/payouts.
 export type PayoutRow = {
   session_id: string;

@@ -1,5 +1,6 @@
 import type { Address } from "viem";
 import localDeployment from "./deployments/local.json";
+import polygonDeployment from "./deployments/polygon.json";
 
 /// The set of contracts the frontend reads on-chain.
 export type ContractName =
@@ -16,20 +17,38 @@ export type ContractAddresses = Record<ContractName, Address>;
 
 const ZERO: Address = "0x0000000000000000000000000000000000000000";
 
-/// Local Anvil (chainId 31337) addresses, sourced from the committed
-/// `lib/deployments/local.json`. These are deterministic for the current
-/// `Deploy.s.sol` deployment order; if that order changes, regenerate the JSON.
-const anvil: ContractAddresses = {
-  primToken: localDeployment.primToken as Address,
-  treasury: localDeployment.treasury as Address,
-  miningContract: localDeployment.miningContract as Address,
-  oracleAggregator: localDeployment.oracleAggregator as Address,
-  stakingContract: localDeployment.stakingContract as Address,
-  nodeRegistry: localDeployment.nodeRegistry as Address,
-  houseEdge: localDeployment.houseEdge as Address,
+/// Shape of a committed deployment JSON (`local.json`, `polygon.json`).
+type Deployment = {
+  primToken: string;
+  treasury: string;
+  miningContract: string;
+  oracleAggregator: string;
+  stakingContract: string;
+  nodeRegistry: string;
+  houseEdge: string;
 };
 
-/// Ethereum mainnet (chainId 1) placeholders until contracts are deployed.
+function fromDeployment(d: Deployment): ContractAddresses {
+  return {
+    primToken: d.primToken as Address,
+    treasury: d.treasury as Address,
+    miningContract: d.miningContract as Address,
+    oracleAggregator: d.oracleAggregator as Address,
+    stakingContract: d.stakingContract as Address,
+    nodeRegistry: d.nodeRegistry as Address,
+    houseEdge: d.houseEdge as Address,
+  };
+}
+
+const useLocalChains = process.env.NEXT_PUBLIC_USE_LOCAL_CHAINS === "true";
+
+/// Local Anvil deterministic addresses for chain id 1 (:8545), from local.json.
+const localEthereum = fromDeployment(localDeployment);
+/// Local Anvil deterministic addresses for chain id 137 (:8546), from
+/// polygon.json. Identical to `localEthereum` (shared deployer + nonce).
+const localPolygon = fromDeployment(polygonDeployment);
+
+/// Ethereum mainnet (chain id 1) placeholders until contracts are deployed.
 const mainnet: ContractAddresses = {
   primToken: ZERO,
   treasury: ZERO,
@@ -40,11 +59,18 @@ const mainnet: ContractAddresses = {
   houseEdge: ZERO,
 };
 
-/// Contract addresses keyed by chain id.
-export const addresses: Record<number, ContractAddresses> = {
-  1: mainnet,
-  31337: anvil,
-};
+/// Polygon mainnet (chain id 137) placeholders until contracts are deployed.
+const polygon: ContractAddresses = { ...mainnet };
+
+/// Contract addresses keyed by chain id. Both modes use ids 1 and 137; the
+/// `NEXT_PUBLIC_USE_LOCAL_CHAINS` flag (shared with `lib/wagmi.ts`) swaps the
+/// whole environment between the local dual-Anvil deploys and the
+/// (not-yet-deployed) mainnet/Polygon sets. Real chain id 1 and 137 deployments
+/// will have DIFFERENT addresses; the registry is keyed by chainId so it is
+/// ready for them.
+export const addresses: Record<number, ContractAddresses> = useLocalChains
+  ? { 1: localEthereum, 137: localPolygon }
+  : { 1: mainnet, 137: polygon };
 
 /// Returns the address registry for `chainId`, or `undefined` if unsupported.
 export function addressesForChain(

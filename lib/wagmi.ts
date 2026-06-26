@@ -1,0 +1,64 @@
+import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { http } from "wagmi";
+import { mainnet, polygon } from "wagmi/chains";
+import { defineChain, type Chain as ViemChain } from "viem";
+
+/// When `NEXT_PUBLIC_USE_LOCAL_CHAINS=true`, the app targets the local dual-Anvil
+/// pair instead of real RPCs. Both modes use chain ids 1 and 137, so the
+/// chainId-keyed address registry and the backend's chain ids line up unchanged.
+const useLocalChains = process.env.NEXT_PUBLIC_USE_LOCAL_CHAINS === "true";
+
+/// Local Anvil standing in for Ethereum: chain id 1 on :8545 (backend dual-chain
+/// smoke setup). Real chain id 1 in production is `mainnet`.
+const localEthereum = defineChain({
+  id: 1,
+  name: "Local Ethereum (Anvil)",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: { default: { http: ["http://localhost:8545"] } },
+});
+
+/// Local Anvil standing in for Polygon: chain id 137 on :8546. Real chain id 137
+/// in production is `polygon`.
+const localPolygon = defineChain({
+  id: 137,
+  name: "Local Polygon (Anvil)",
+  nativeCurrency: { name: "POL", symbol: "POL", decimals: 18 },
+  rpcUrls: { default: { http: ["http://localhost:8546"] } },
+});
+
+/// The Ethereum-side chain (id 1): local Anvil in dev, mainnet in production.
+export const ethereumChain: ViemChain = useLocalChains ? localEthereum : mainnet;
+/// The Polygon-side chain (id 137): local Anvil in dev, Polygon in production.
+export const polygonChain: ViemChain = useLocalChains ? localPolygon : polygon;
+
+/// Both configured chains, as the non-empty tuple wagmi expects.
+export const chains = [ethereumChain, polygonChain] as const;
+
+/// Read RPC URL for a configured chain: an explicit env override when set, else
+/// the chain's default endpoint. Used for both wagmi transports and the
+/// per-chain read clients in `lib/clients.ts`.
+export function rpcUrlFor(chain: ViemChain): string {
+  if (chain.id === 1 && process.env.NEXT_PUBLIC_ETHEREUM_RPC_URL) {
+    return process.env.NEXT_PUBLIC_ETHEREUM_RPC_URL;
+  }
+  if (chain.id === 137 && process.env.NEXT_PUBLIC_POLYGON_RPC_URL) {
+    return process.env.NEXT_PUBLIC_POLYGON_RPC_URL;
+  }
+  return chain.rpcUrls.default.http[0];
+}
+
+const projectId =
+  process.env.NEXT_PUBLIC_WC_PROJECT_ID ?? "PRIMORA_DEV_PLACEHOLDER";
+
+/// Shared wagmi + RainbowKit config. Transports are pinned per chain id so each
+/// chain reads from its own RPC.
+export const wagmiConfig = getDefaultConfig({
+  appName: "Primora",
+  projectId,
+  chains,
+  transports: {
+    [ethereumChain.id]: http(rpcUrlFor(ethereumChain)),
+    [polygonChain.id]: http(rpcUrlFor(polygonChain)),
+  },
+  ssr: true,
+});

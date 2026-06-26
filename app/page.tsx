@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useAccount } from "wagmi";
 import { useQuery } from "@tanstack/react-query";
 import { getPayouts, type PayoutRow } from "@/lib/api";
-import { chainLabel, type Chain } from "@/lib/chain";
+import { chainLabel, chainIdFor, type Chain } from "@/lib/chain";
+import { publicClientFor } from "@/lib/clients";
+import { getContract } from "@/lib/contracts";
 
 /*
  * Overview page content. All values below are PLACEHOLDER and hardcoded to match
@@ -116,15 +118,46 @@ const PLACEHOLDER_STAKING = {
 
 const PLACEHOLDER_ORACLE = {
   active: "Chainlink",
-  feeds: [
-    { label: "XAU/USD", value: "$3,204.00" },
-    { label: "XAG/USD", value: "$31.80" },
-    { label: "XPT/USD", value: "$981.00" },
-    { label: "WTI/USD", value: "$73.40" },
-  ],
   difficulty: "1.84x avg",
   priceRef: "TWAP · 5min samples",
 };
+
+const ORACLE_PRICE_DECIMALS = 8;
+
+const ORACLE_FEEDS = [
+  { label: "XAU/USD", ordinal: 0 },
+  { label: "XAG/USD", ordinal: 2 },
+  { label: "XPT/USD", ordinal: 1 },
+  { label: "WTI/USD", ordinal: 3 },
+];
+
+function formatUsd(price: bigint, decimals: number): string {
+  const scale = 10n ** BigInt(decimals);
+  const cents = (price * 100n + scale / 2n) / scale;
+  const grouped = (cents / 100n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return `$${grouped}.${(cents % 100n).toString().padStart(2, "0")}`;
+}
+
+async function readOraclePrices(): Promise<Record<number, bigint | null>> {
+  const client = publicClientFor("ethereum");
+  const oracle = getContract(chainIdFor("ethereum"), "oracleAggregator");
+  const results = await Promise.all(
+    ORACLE_FEEDS.map((feed) =>
+      client.readContract({
+        address: oracle.address,
+        abi: oracle.abi,
+        functionName: "getPriceUnchecked",
+        args: [feed.ordinal],
+      }),
+    ),
+  );
+  const prices: Record<number, bigint | null> = {};
+  ORACLE_FEEDS.forEach((feed, i) => {
+    const [price, , initialized] = results[i] as readonly [bigint, bigint, boolean];
+    prices[feed.ordinal] = initialized ? price : null;
+  });
+  return prices;
+}
 
 const PLACEHOLDER_RESERVE = {
   ratio: "168%",
@@ -324,6 +357,49 @@ function RecentPayouts() {
   );
 }
 
+function OracleNetwork() {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["oracle-prices"],
+    queryFn: readOraclePrices,
+    refetchInterval: 45_000,
+  });
+
+  function priceFor(ordinal: number): string {
+    if (isLoading) return "…";
+    if (isError) return "—";
+    const price = data?.[ordinal];
+    return price == null ? "—" : formatUsd(price, ORACLE_PRICE_DECIMALS);
+  }
+
+  return (
+    <div className="card" style={{ padding: "20px" }}>
+      <div style={{ fontWeight: 600, fontSize: "14px", marginBottom: "14px" }}>Oracle &amp; Network</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "12px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ color: "#71717a" }}>Active oracle</span>
+          <span style={{ color: "#4ade80", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}>
+            <span className="pulse" style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />{PLACEHOLDER_ORACLE.active}
+          </span>
+        </div>
+        {ORACLE_FEEDS.map((feed) => (
+          <div key={feed.label} style={{ display: "flex", justifyContent: "space-between" }}>
+            <span style={{ color: "#71717a" }}>{feed.label}</span>
+            <span style={{ fontFamily: "monospace", fontWeight: 500 }}>{priceFor(feed.ordinal)}</span>
+          </div>
+        ))}
+        <div style={{ paddingTop: "8px", borderTop: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between" }}>
+          <span style={{ color: "#71717a" }}>Difficulty</span>
+          <span style={{ fontWeight: 600 }}>{PLACEHOLDER_ORACLE.difficulty}</span>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <span style={{ color: "#71717a" }}>Price ref.</span>
+          <span style={{ fontSize: "10px", color: "#52525b" }}>{PLACEHOLDER_ORACLE.priceRef}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function OverviewPage() {
   return (
     <>
@@ -441,31 +517,7 @@ export default function OverviewPage() {
           <Link href="/stake" style={{ display: "block", textAlign: "center", marginTop: "14px", padding: "8px", background: "#1f1f1f", color: "#e4e4e7", borderRadius: "10px", fontSize: "11px", fontWeight: 600, textDecoration: "none" }}>Manage Stake</Link>
         </div>
 
-        <div className="card" style={{ padding: "20px" }}>
-          <div style={{ fontWeight: 600, fontSize: "14px", marginBottom: "14px" }}>Oracle &amp; Network</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "12px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ color: "#71717a" }}>Active oracle</span>
-              <span style={{ color: "#4ade80", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}>
-                <span className="pulse" style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />{PLACEHOLDER_ORACLE.active}
-              </span>
-            </div>
-            {PLACEHOLDER_ORACLE.feeds.map((feed) => (
-              <div key={feed.label} style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "#71717a" }}>{feed.label}</span>
-                <span style={{ fontFamily: "monospace", fontWeight: 500 }}>{feed.value}</span>
-              </div>
-            ))}
-            <div style={{ paddingTop: "8px", borderTop: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "#71717a" }}>Difficulty</span>
-              <span style={{ fontWeight: 600 }}>{PLACEHOLDER_ORACLE.difficulty}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "#71717a" }}>Price ref.</span>
-              <span style={{ fontSize: "10px", color: "#52525b" }}>{PLACEHOLDER_ORACLE.priceRef}</span>
-            </div>
-          </div>
-        </div>
+        <OracleNetwork />
 
         <div className="card" style={{ padding: "20px" }}>
           <div style={{ fontWeight: 600, fontSize: "14px", marginBottom: "14px" }}>Reserve Health</div>

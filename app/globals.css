@@ -24,3 +24,87 @@ body {
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
 }
+
+/* Reusable component classes ported verbatim from design-reference/overview.html
+   (.card / .kpi* / grids / progress bars / comm-tag / pulse). Per-element colors
+   and widths stay inline at the call site, exactly as in the mock. */
+.card {
+  background: var(--color-primora-surface);
+  border: 1px solid var(--color-primora-border);
+  border-radius: 24px;
+}
+.tabnum {
+  font-variant-numeric: tabular-nums;
+}
+.pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+.kpi {
+  background: var(--color-primora-surface);
+  border: 1px solid var(--color-primora-border);
+  border-radius: 20px;
+  padding: 18px;
+}
+.kpi-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #52525b;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.kpi-val {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.kpi-sub {
+  font-size: 11px;
+  color: #71717a;
+  margin-top: 4px;
+}
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.three-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+.prog-wrap {
+  height: 3px;
+  background: #1f1f1f;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.prog-bar {
+  height: 3px;
+  border-radius: 2px;
+}
+.comm-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 700;
+}

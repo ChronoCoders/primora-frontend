@@ -2,6 +2,10 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
+import { useAccount } from "wagmi";
+import { useQuery } from "@tanstack/react-query";
+import { getPayouts, type PayoutRow } from "@/lib/api";
+import { chainLabel, type Chain } from "@/lib/chain";
 
 /*
  * Overview page content. All values below are PLACEHOLDER and hardcoded to match
@@ -134,22 +138,73 @@ const PLACEHOLDER_RESERVE = {
   houseEdge: "17% · default",
 };
 
-type Payout = {
-  date: string;
-  commodity: { label: string; bg: string; color: string };
-  chain: { label: string; bg: string; color: string };
-  prm: string;
-  net: string;
-  tx: string;
+const PAYOUT_LIMIT = 5;
+
+const shortDate = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+});
+
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? iso : shortDate.format(d);
+}
+
+function formatPrm(value: string): string {
+  const [intPart, frac] = value.split(".");
+  if (!/^\d+$/.test(intPart)) return value;
+  const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return frac ? `${grouped}.${frac}` : grouped;
+}
+
+type Badge = { label: string; bg: string; color: string };
+
+const FALLBACK_BADGE: Badge = {
+  label: "",
+  bg: "rgba(113,113,122,.12)",
+  color: "#a1a1aa",
 };
 
-const POLYGON_BADGE = { bg: "rgba(123,63,228,.1)", color: "#9B6FEA" };
-const ETHEREUM_BADGE = { bg: "rgba(98,126,234,.1)", color: "#8299EE" };
+const COMMODITY_BADGES: Record<string, Badge> = {
+  gold: { label: "Au · Gold", bg: "rgba(212,168,71,.1)", color: "#D4A847" },
+  silver: { label: "Ag · Silver", bg: "rgba(168,180,192,.08)", color: "#A8B4C0" },
+  platinum: { label: "Pt · Platinum", bg: "rgba(200,212,220,.08)", color: "#C8D4DC" },
+  oil: { label: "WTI · Crude Oil", bg: "rgba(148,163,184,.08)", color: "#94a3b8" },
+  crudeoil: { label: "WTI · Crude Oil", bg: "rgba(148,163,184,.08)", color: "#94a3b8" },
+  wti: { label: "WTI · Crude Oil", bg: "rgba(148,163,184,.08)", color: "#94a3b8" },
+};
 
-const PLACEHOLDER_PAYOUTS: Payout[] = [
-  { date: "Jun 21", commodity: { label: "Au · Gold", bg: "rgba(212,168,71,.1)", color: "#D4A847" }, chain: { label: "Polygon", ...POLYGON_BADGE }, prm: "118.2", net: "$15.23", tx: "0x9c4b..." },
-  { date: "Jun 20", commodity: { label: "Ag · Silver", bg: "rgba(168,180,192,.08)", color: "#A8B4C0" }, chain: { label: "Polygon", ...POLYGON_BADGE }, prm: "148.6", net: "$13.89", tx: "0x7e2a..." },
-  { date: "Jun 19", commodity: { label: "Pt · Platinum", bg: "rgba(200,212,220,.08)", color: "#C8D4DC" }, chain: { label: "Ethereum", ...ETHEREUM_BADGE }, prm: "98.4", net: "$14.12", tx: "0x3d8f..." },
+function commodityBadge(commodity: string): Badge {
+  return (
+    COMMODITY_BADGES[commodity.toLowerCase()] ?? {
+      ...FALLBACK_BADGE,
+      label: commodity,
+    }
+  );
+}
+
+const CHAIN_BADGES: Record<Chain, { bg: string; color: string }> = {
+  ethereum: { bg: "rgba(98,126,234,.1)", color: "#8299EE" },
+  polygon: { bg: "rgba(123,63,228,.1)", color: "#9B6FEA" },
+};
+
+function isChain(value: string): value is Chain {
+  return value === "ethereum" || value === "polygon";
+}
+
+function chainBadge(chain: string): Badge {
+  return isChain(chain)
+    ? { label: chainLabel(chain), ...CHAIN_BADGES[chain] }
+    : { ...FALLBACK_BADGE, label: chain };
+}
+
+const PAYOUT_COLUMNS = [
+  { label: "Date", align: "left" as const, width: "20%" },
+  { label: "Commodity", align: "left" as const, width: "18%" },
+  { label: "Chain", align: "left" as const, width: "14%" },
+  { label: "PRM", align: "right" as const, width: "16%" },
+  { label: "Net USDC", align: "right" as const, width: "16%" },
+  { label: "Tx", align: "right" as const, width: undefined },
 ];
 
 type Site = {
@@ -188,6 +243,83 @@ function KpiCard({ kpi }: { kpi: Kpi }) {
           <div className="prog-bar" style={{ width: `${kpi.progress.pct}%`, background: kpi.progress.color }} />
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function PayoutStateRow({ message }: { message: string }) {
+  return (
+    <tr>
+      <td
+        colSpan={PAYOUT_COLUMNS.length}
+        style={{ padding: "28px 0", textAlign: "center", color: "#52525b", fontSize: "12px" }}
+      >
+        {message}
+      </td>
+    </tr>
+  );
+}
+
+function RecentPayouts() {
+  const { address, isConnected } = useAccount();
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["payouts", address],
+    queryFn: () => {
+      if (!address) throw new Error("wallet not connected");
+      return getPayouts(address, PAYOUT_LIMIT);
+    },
+    enabled: isConnected && Boolean(address),
+  });
+
+  const rows: PayoutRow[] = data ?? [];
+
+  return (
+    <div className="card" style={{ padding: "22px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+        <div style={{ fontWeight: 600, fontSize: "14px" }}>Recent Payouts</div>
+        <Link href="/wallet" style={{ fontSize: "11px", color: "#F59E0B", textDecoration: "none", fontWeight: 600 }}>View all →</Link>
+      </div>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+        <thead>
+          <tr style={{ borderBottom: "1px solid #1a1a1a" }}>
+            {PAYOUT_COLUMNS.map((col) => (
+              <th key={col.label} style={{ textAlign: col.align, padding: "6px 0", fontSize: "9px", fontWeight: 700, letterSpacing: ".06em", color: "#52525b", textTransform: "uppercase", width: col.width }}>
+                {col.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {!isConnected ? (
+            <PayoutStateRow message="Connect your wallet to see payouts" />
+          ) : isLoading ? (
+            <PayoutStateRow message="Loading…" />
+          ) : isError ? (
+            <PayoutStateRow message="Couldn't load payouts" />
+          ) : rows.length === 0 ? (
+            <PayoutStateRow message="No payouts yet" />
+          ) : (
+            rows.map((row, i) => {
+              const commodity = commodityBadge(row.commodity);
+              const chain = chainBadge(row.chain);
+              return (
+                <tr key={row.session_id} style={i === rows.length - 1 ? undefined : { borderBottom: "1px solid #141414" }}>
+                  <td style={{ padding: "10px 0", color: "#71717a" }}>{formatDate(row.created_at)}</td>
+                  <td style={{ padding: "10px 0" }}>
+                    <span style={{ fontSize: "10px", padding: "2px 6px", background: commodity.bg, color: commodity.color, borderRadius: "4px", fontWeight: 700 }}>{commodity.label}</span>
+                  </td>
+                  <td style={{ padding: "10px 0" }}>
+                    <span style={{ fontSize: "10px", padding: "2px 6px", background: chain.bg, color: chain.color, borderRadius: "4px", fontWeight: 700 }}>{chain.label}</span>
+                  </td>
+                  <td style={{ padding: "10px 0", textAlign: "right", fontFamily: "monospace", fontWeight: 600 }}>{formatPrm(row.gross_prm)}</td>
+                  <td style={{ padding: "10px 0", textAlign: "right", color: "#52525b" }}>—</td>
+                  <td style={{ padding: "10px 0", textAlign: "right", color: "#52525b" }}>—</td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -362,48 +494,7 @@ export default function OverviewPage() {
       </div>
 
       {/* Recent payouts */}
-      <div className="card" style={{ padding: "22px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-          <div style={{ fontWeight: 600, fontSize: "14px" }}>Recent Payouts</div>
-          <Link href="/wallet" style={{ fontSize: "11px", color: "#F59E0B", textDecoration: "none", fontWeight: 600 }}>View all →</Link>
-        </div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid #1a1a1a" }}>
-              {[
-                { label: "Date", align: "left" as const, width: "20%" },
-                { label: "Commodity", align: "left" as const, width: "18%" },
-                { label: "Chain", align: "left" as const, width: "14%" },
-                { label: "PRM", align: "right" as const, width: "16%" },
-                { label: "Net USDC", align: "right" as const, width: "16%" },
-                { label: "Tx", align: "right" as const, width: undefined },
-              ].map((col) => (
-                <th key={col.label} style={{ textAlign: col.align, padding: "6px 0", fontSize: "9px", fontWeight: 700, letterSpacing: ".06em", color: "#52525b", textTransform: "uppercase", width: col.width }}>
-                  {col.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {PLACEHOLDER_PAYOUTS.map((p, i) => (
-              <tr key={p.tx} style={i === PLACEHOLDER_PAYOUTS.length - 1 ? undefined : { borderBottom: "1px solid #141414" }}>
-                <td style={{ padding: "10px 0", color: "#71717a" }}>{p.date}</td>
-                <td style={{ padding: "10px 0" }}>
-                  <span style={{ fontSize: "10px", padding: "2px 6px", background: p.commodity.bg, color: p.commodity.color, borderRadius: "4px", fontWeight: 700 }}>{p.commodity.label}</span>
-                </td>
-                <td style={{ padding: "10px 0" }}>
-                  <span style={{ fontSize: "10px", padding: "2px 6px", background: p.chain.bg, color: p.chain.color, borderRadius: "4px", fontWeight: 700 }}>{p.chain.label}</span>
-                </td>
-                <td style={{ padding: "10px 0", textAlign: "right", fontFamily: "monospace", fontWeight: 600 }}>{p.prm}</td>
-                <td style={{ padding: "10px 0", textAlign: "right", fontWeight: 700, color: "#4ade80" }}>{p.net}</td>
-                <td style={{ padding: "10px 0", textAlign: "right" }}>
-                  <a href="#" style={{ color: "#F59E0B", textDecoration: "none", fontFamily: "monospace", fontSize: "10px" }}>{p.tx}</a>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <RecentPayouts />
 
       {/* Mining sites */}
       <div className="card" style={{ padding: "22px" }}>

@@ -4,6 +4,7 @@ export type PayoutRow = {
   wallet: string;
   gross_prm: string;
   commodity: string;
+  chain: string;
   status: string;
   created_at: string;
 };

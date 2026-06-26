@@ -3,6 +3,8 @@ export type PayoutRow = {
   session_id: string;
   wallet: string;
   gross_prm: string;
+  /// Net payout in USD cents (Spec 4.8); null for rows that predate USD persistence.
+  net_usd_cents?: number | null;
   commodity: string;
   chain: string;
   status: string;
@@ -14,6 +16,8 @@ export type EarningsRow = {
   commodity: string;
   session_count: number;
   total_gross_prm: string;
+  /// Gross USD value of the summed PRM in cents, at the fixed PRM reference price (Spec 4.8).
+  total_usd_cents: number;
 };
 
 /// An active session summary, from GET /wallets/:wallet/sessions.

@@ -4,7 +4,7 @@ import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 import { useQuery } from "@tanstack/react-query";
-import { getPayouts, getStaking, type PayoutRow, type ChainStake } from "@/lib/api";
+import { getPayouts, getStaking, getEarnings, type PayoutRow, type ChainStake, type EarningsRow } from "@/lib/api";
 import { chainLabel, chainIdFor, type Chain } from "@/lib/chain";
 import { publicClientFor } from "@/lib/clients";
 import { getContract } from "@/lib/contracts";
@@ -85,26 +85,43 @@ const PLACEHOLDER_ACTIVE_MINING = {
   ],
 };
 
-type CommodityEarning = {
-  symbol: string;
-  symbolColor: string;
+type CommodityMeta = {
+  symbol?: string;
   icon?: string;
   name: string;
-  mult: string;
+  difficulty: string;
+  color: string;
   multBg: string;
-  multColor: string;
-  barPct: number;
-  barColor: string;
-  amount: string;
-  date: string;
 };
 
-const PLACEHOLDER_COMMODITY_EARNINGS: CommodityEarning[] = [
-  { symbol: "Au", symbolColor: "#D4A847", name: "Gold", mult: "4.0x", multBg: "rgba(212,168,71,.1)", multColor: "#D4A847", barPct: 44, barColor: "#D4A847", amount: "$8.04", date: "Jun 22" },
-  { symbol: "Pt", symbolColor: "#C8D4DC", name: "Platinum", mult: "3.2x", multBg: "rgba(200,212,220,.08)", multColor: "#C8D4DC", barPct: 20, barColor: "#C8D4DC", amount: "$14.12", date: "Jun 21" },
-  { symbol: "Ag", symbolColor: "#A8B4C0", name: "Silver", mult: "2.0x", multBg: "rgba(168,180,192,.08)", multColor: "#A8B4C0", barPct: 28, barColor: "#A8B4C0", amount: "$13.89", date: "Jun 20" },
-  { symbol: "", symbolColor: "#94a3b8", icon: "fa-droplet", name: "Crude Oil", mult: "1.0x", multBg: "rgba(148,163,184,.08)", multColor: "#94a3b8", barPct: 8, barColor: "#94a3b8", amount: "$12.40", date: "Jun 18" },
-];
+const COMMODITY_META: Record<string, CommodityMeta> = {
+  gold: { symbol: "Au", name: "Gold", difficulty: "4.0x", color: "#D4A847", multBg: "rgba(212,168,71,.1)" },
+  platinum: { symbol: "Pt", name: "Platinum", difficulty: "3.2x", color: "#C8D4DC", multBg: "rgba(200,212,220,.08)" },
+  silver: { symbol: "Ag", name: "Silver", difficulty: "2.0x", color: "#A8B4C0", multBg: "rgba(168,180,192,.08)" },
+  crudeoil: { icon: "fa-droplet", name: "Crude Oil", difficulty: "1.0x", color: "#94a3b8", multBg: "rgba(148,163,184,.08)" },
+};
+
+const COMMODITY_ORDER = ["gold", "platinum", "silver", "crudeoil"];
+
+function commodityMeta(commodity: string): CommodityMeta {
+  return (
+    COMMODITY_META[commodity.toLowerCase()] ?? {
+      symbol: commodity.slice(0, 2),
+      name: commodity,
+      difficulty: "—",
+      color: "#a1a1aa",
+      multBg: "rgba(113,113,122,.12)",
+    }
+  );
+}
+
+function prmToBig(value: string): bigint {
+  try {
+    return BigInt(value.split(".")[0] || "0");
+  } catch {
+    return 0n;
+  }
+}
 
 const STAKING_REVENUE_SHARE = "20% of platform fees";
 const STAKING_WEEKLY_REWARD = "—";
@@ -426,6 +443,92 @@ function OracleNetwork() {
   );
 }
 
+function commodityOrderIndex(commodity: string): number {
+  const i = COMMODITY_ORDER.indexOf(commodity.toLowerCase());
+  return i === -1 ? COMMODITY_ORDER.length : i;
+}
+
+function EarningsByCommodity() {
+  const { address, isConnected } = useAccount();
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["earnings", address],
+    queryFn: () => {
+      if (!address) throw new Error("wallet not connected");
+      return getEarnings(address);
+    },
+    enabled: isConnected && Boolean(address),
+  });
+
+  const rows: EarningsRow[] = [...(data ?? [])].sort(
+    (a, b) => commodityOrderIndex(a.commodity) - commodityOrderIndex(b.commodity),
+  );
+  const total = rows.reduce((acc, r) => acc + prmToBig(r.total_gross_prm), 0n);
+
+  function sharePct(value: string): number {
+    if (total === 0n) return 0;
+    return Number((prmToBig(value) * 10000n) / total) / 100;
+  }
+
+  const message = !isConnected
+    ? "Connect your wallet"
+    : isLoading
+      ? "Loading…"
+      : isError
+        ? "Couldn't load earnings"
+        : rows.length === 0
+          ? "No earnings yet"
+          : null;
+
+  return (
+    <div className="card" style={{ padding: "22px" }}>
+      <div style={{ fontWeight: 600, fontSize: "14px", marginBottom: "16px" }}>Earnings by Commodity</div>
+      {message ? (
+        <div style={{ padding: "28px 0", textAlign: "center", color: "#52525b", fontSize: "12px" }}>{message}</div>
+      ) : (
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <tbody>
+            {rows.map((row, i) => {
+              const meta = commodityMeta(row.commodity);
+              const first = i === 0;
+              const last = i === rows.length - 1;
+              const padV = first ? "0 0 10px 0" : last ? "10px 0 0 0" : "10px 0";
+              const padCell = first ? "0 0 10px 12px" : last ? "10px 0 0 12px" : "10px 0 10px 12px";
+              return (
+                <tr key={row.commodity}>
+                  <td style={{ padding: padV, width: first ? "150px" : undefined }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+                      {meta.icon ? (
+                        <i className={`fa-solid ${meta.icon}`} style={{ fontSize: "12px", color: meta.color, width: "13px" }} />
+                      ) : (
+                        <span style={{ fontSize: "13px", fontWeight: 700, color: meta.color, fontFamily: "var(--font-display)" }}>{meta.symbol}</span>
+                      )}
+                      <span style={{ fontSize: "12px", fontWeight: 600 }}>{meta.name}</span>
+                      <span className="comm-tag" style={{ background: meta.multBg, color: meta.color }}>{meta.difficulty}</span>
+                    </div>
+                  </td>
+                  <td style={{ padding: padCell }}>
+                    <div className="prog-wrap" style={{ marginTop: 0 }}>
+                      <div className="prog-bar" style={{ width: `${sharePct(row.total_gross_prm)}%`, background: meta.color }} />
+                    </div>
+                  </td>
+                  <td style={{ padding: padCell, textAlign: "right", whiteSpace: "nowrap", width: first ? "120px" : undefined }}>
+                    <span style={{ fontSize: "13px", fontWeight: 600 }}>{formatPrm(row.total_gross_prm)}</span>
+                    <span style={{ fontSize: "10px", color: "#52525b", marginLeft: "4px" }}>PRM</span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+      <div style={{ paddingTop: "12px", borderTop: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", fontSize: "12px", marginTop: "10px" }}>
+        <span style={{ color: "#71717a" }}>Gross PRM · before 17% platform fee</span>
+        <Link href="/my-mining" style={{ color: "#F59E0B", textDecoration: "none", fontWeight: 600 }}>Full history →</Link>
+      </div>
+    </div>
+  );
+}
+
 function StakingCard() {
   const { address, isConnected } = useAccount();
   const { data, isLoading, isError } = useQuery({
@@ -539,47 +642,7 @@ export default function OverviewPage() {
           </div>
         </div>
 
-        <div className="card" style={{ padding: "22px" }}>
-          <div style={{ fontWeight: 600, fontSize: "14px", marginBottom: "16px" }}>Earnings by Commodity</div>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <tbody>
-              {PLACEHOLDER_COMMODITY_EARNINGS.map((row, i) => {
-                const first = i === 0;
-                const last = i === PLACEHOLDER_COMMODITY_EARNINGS.length - 1;
-                const padV = first ? "0 0 10px 0" : last ? "10px 0 0 0" : "10px 0";
-                const padCell = first ? "0 0 10px 12px" : last ? "10px 0 0 12px" : "10px 0 10px 12px";
-                return (
-                  <tr key={row.name}>
-                    <td style={{ padding: padV, width: first ? "130px" : undefined }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                        {row.icon ? (
-                          <i className={`fa-solid ${row.icon}`} style={{ fontSize: "12px", color: row.symbolColor, width: "13px" }} />
-                        ) : (
-                          <span style={{ fontSize: "13px", fontWeight: 700, color: row.symbolColor, fontFamily: "var(--font-display)" }}>{row.symbol}</span>
-                        )}
-                        <span style={{ fontSize: "12px", fontWeight: 600 }}>{row.name}</span>
-                        <span className="comm-tag" style={{ background: row.multBg, color: row.multColor }}>{row.mult}</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: padCell }}>
-                      <div className="prog-wrap" style={{ marginTop: 0 }}>
-                        <div className="prog-bar" style={{ width: `${row.barPct}%`, background: row.barColor }} />
-                      </div>
-                    </td>
-                    <td style={{ padding: padCell, textAlign: "right", whiteSpace: "nowrap", width: first ? "110px" : undefined }}>
-                      <span style={{ fontSize: "13px", fontWeight: 600 }}>{row.amount}</span>
-                      <span style={{ fontSize: "10px", color: "#52525b", marginLeft: "4px" }}>{row.date}</span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <div style={{ paddingTop: "12px", borderTop: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", fontSize: "12px", marginTop: "10px" }}>
-            <span style={{ color: "#71717a" }}>All figures net of 17% platform fee</span>
-            <Link href="/my-mining" style={{ color: "#F59E0B", textDecoration: "none", fontWeight: 600 }}>Full history →</Link>
-          </div>
-        </div>
+        <EarningsByCommodity />
       </div>
 
       {/* Staking + Oracle + Reserve row */}

@@ -84,3 +84,26 @@ export function getSessions(wallet: string): Promise<SessionSummary[]> {
     `/api/wallets/${encodeURIComponent(wallet)}/sessions`,
   );
 }
+
+/// A wallet's active stake on one chain, from GET /wallets/:wallet/staking.
+export type ChainStake = {
+  chain: string;
+  amount: string;
+  lock_period: number;
+  active: boolean;
+};
+
+/// A wallet's cross-chain staking summary. `effective_boost_bps` is computed and
+/// capped by the backend (single source of truth); the frontend only displays it.
+export type StakingSummary = {
+  chains: ChainStake[];
+  total_staked: string;
+  effective_boost_bps: number;
+};
+
+/// Fetches a wallet's per-chain stake and combined effective boost.
+export function getStaking(wallet: string): Promise<StakingSummary> {
+  return getJson<StakingSummary>(
+    `/api/wallets/${encodeURIComponent(wallet)}/staking`,
+  );
+}

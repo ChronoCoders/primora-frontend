@@ -4,7 +4,7 @@ import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 import { useQuery } from "@tanstack/react-query";
-import { getPayouts, type PayoutRow } from "@/lib/api";
+import { getPayouts, getStaking, type PayoutRow, type ChainStake } from "@/lib/api";
 import { chainLabel, chainIdFor, type Chain } from "@/lib/chain";
 import { publicClientFor } from "@/lib/clients";
 import { getContract } from "@/lib/contracts";
@@ -106,15 +106,41 @@ const PLACEHOLDER_COMMODITY_EARNINGS: CommodityEarning[] = [
   { symbol: "", symbolColor: "#94a3b8", icon: "fa-droplet", name: "Crude Oil", mult: "1.0x", multBg: "rgba(148,163,184,.08)", multColor: "#94a3b8", barPct: 8, barColor: "#94a3b8", amount: "$12.40", date: "Jun 18" },
 ];
 
-const PLACEHOLDER_STAKING = {
-  rows: [
-    { label: "Polygon", value: "0 PRM", valueColor: undefined, divider: false },
-    { label: "Ethereum · 180d", value: "10,000 PRM", valueColor: undefined, divider: false },
-    { label: "Effective boost", value: "+40% (max)", valueColor: "#F59E0B", divider: true },
-    { label: "Weekly reward", value: "$4.28 USDC", valueColor: "#4ade80", divider: false },
-  ],
-  revenueShare: "20% of platform fees",
-};
+const STAKING_REVENUE_SHARE = "20% of platform fees";
+const STAKING_WEEKLY_REWARD = "—";
+const STAKING_MAX_BOOST_BPS = 4000;
+const STAKING_LOCK_LABELS: Record<number, string> = { 0: "30d", 1: "90d", 2: "180d" };
+const PRM_DECIMALS = 18n;
+
+function formatPrmWei(weiStr: string): string {
+  let wei: bigint;
+  try {
+    wei = BigInt(weiStr);
+  } catch {
+    return `${weiStr} PRM`;
+  }
+  const scale = 10n ** PRM_DECIMALS;
+  const grouped = (wei / scale).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const remainder = wei % scale;
+  if (remainder === 0n) return `${grouped} PRM`;
+  const frac = ((remainder * 100n) / scale).toString().padStart(2, "0").replace(/0+$/, "");
+  return frac.length > 0 ? `${grouped}.${frac} PRM` : `${grouped} PRM`;
+}
+
+function formatBoost(bps: number): string {
+  const pct = bps / 100;
+  const pctStr = Number.isInteger(pct) ? pct.toString() : pct.toFixed(1);
+  return `+${pctStr}%${bps >= STAKING_MAX_BOOST_BPS ? " (max)" : ""}`;
+}
+
+function chainRowLabel(c: ChainStake): string {
+  const name = isChain(c.chain) ? chainLabel(c.chain) : c.chain;
+  if (c.chain === "ethereum") {
+    const lock = STAKING_LOCK_LABELS[c.lock_period];
+    return lock ? `${name} · ${lock}` : name;
+  }
+  return name;
+}
 
 const PLACEHOLDER_ORACLE = {
   active: "Chainlink",
@@ -400,6 +426,64 @@ function OracleNetwork() {
   );
 }
 
+function StakingCard() {
+  const { address, isConnected } = useAccount();
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["staking", address],
+    queryFn: () => {
+      if (!address) throw new Error("wallet not connected");
+      return getStaking(address);
+    },
+    enabled: isConnected && Boolean(address),
+  });
+
+  function boostValue(): string {
+    if (isLoading) return "…";
+    if (isError) return "—";
+    return data ? formatBoost(data.effective_boost_bps) : "—";
+  }
+
+  return (
+    <div className="card" style={{ padding: "20px" }}>
+      <div style={{ fontWeight: 600, fontSize: "14px", marginBottom: "14px" }}>Staking</div>
+      {!isConnected ? (
+        <div style={{ padding: "28px 0", textAlign: "center", color: "#52525b", fontSize: "12px" }}>
+          Connect your wallet
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "13px" }}>
+          {isLoading || isError ? (
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ color: "#71717a" }}>Stake</span>
+              <span style={{ fontWeight: 600 }}>{isLoading ? "…" : "—"}</span>
+            </div>
+          ) : (
+            (data?.chains ?? []).map((c) => (
+              <div key={c.chain} style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#71717a" }}>{chainRowLabel(c)}</span>
+                <span style={{ fontWeight: 600 }}>{formatPrmWei(c.amount)}</span>
+              </div>
+            ))
+          )}
+          <div style={{ display: "flex", justifyContent: "space-between", paddingTop: "8px", borderTop: "1px solid #1a1a1a" }}>
+            <span style={{ color: "#71717a" }}>Effective boost</span>
+            <span style={{ fontWeight: 700, color: "#F59E0B" }}>{boostValue()}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span style={{ color: "#71717a" }}>Weekly reward</span>
+            <span style={{ fontSize: "11px", color: "#52525b" }}>{STAKING_WEEKLY_REWARD}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span style={{ color: "#71717a" }}>Revenue share</span>
+            <span style={{ fontSize: "11px", color: "#52525b" }}>{STAKING_REVENUE_SHARE}</span>
+          </div>
+        </div>
+      )}
+      <Link href="/stake" style={{ display: "block", textAlign: "center", marginTop: "14px", padding: "8px", background: "#1f1f1f", color: "#e4e4e7", borderRadius: "10px", fontSize: "11px", fontWeight: 600, textDecoration: "none" }}>Manage Stake</Link>
+    </div>
+  );
+}
+
 export default function OverviewPage() {
   return (
     <>
@@ -500,22 +584,7 @@ export default function OverviewPage() {
 
       {/* Staking + Oracle + Reserve row */}
       <div className="three-col">
-        <div className="card" style={{ padding: "20px" }}>
-          <div style={{ fontWeight: 600, fontSize: "14px", marginBottom: "14px" }}>Staking</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "13px" }}>
-            {PLACEHOLDER_STAKING.rows.map((row) => (
-              <div key={row.label} style={{ display: "flex", justifyContent: "space-between", ...(row.divider ? { paddingTop: "8px", borderTop: "1px solid #1a1a1a" } : {}) }}>
-                <span style={{ color: "#71717a" }}>{row.label}</span>
-                <span style={{ fontWeight: row.valueColor ? 700 : 600, ...(row.valueColor ? { color: row.valueColor } : {}) }}>{row.value}</span>
-              </div>
-            ))}
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: "#71717a" }}>Revenue share</span>
-              <span style={{ fontSize: "11px", color: "#52525b" }}>{PLACEHOLDER_STAKING.revenueShare}</span>
-            </div>
-          </div>
-          <Link href="/stake" style={{ display: "block", textAlign: "center", marginTop: "14px", padding: "8px", background: "#1f1f1f", color: "#e4e4e7", borderRadius: "10px", fontSize: "11px", fontWeight: 600, textDecoration: "none" }}>Manage Stake</Link>
-        </div>
+        <StakingCard />
 
         <OracleNetwork />
 

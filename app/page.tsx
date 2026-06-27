@@ -130,6 +130,21 @@ function formatPrmWei(weiStr: string): string {
   return `${formatPrmWeiAmount(weiStr)} PRM`;
 }
 
+function formatPrmWeiShort(weiStr: string): string {
+  let wei: bigint;
+  try {
+    wei = BigInt(weiStr);
+  } catch {
+    return weiStr;
+  }
+  const scale = 10n ** PRM_DECIMALS;
+  const grouped = (wei / scale).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const remainder = wei % scale;
+  if (remainder === 0n) return grouped;
+  const frac = ((remainder * 100n) / scale).toString().padStart(2, "0").replace(/0+$/, "");
+  return frac.length > 0 ? `${grouped}.${frac}` : grouped;
+}
+
 function formatUsdCents(cents: number | null | undefined): string {
   if (cents == null) return "—";
   const c = BigInt(cents);
@@ -764,7 +779,7 @@ function PrmEarned24hKpi() {
   } else if (isLoading) {
     value = "…";
   } else if (data) {
-    value = formatPrmWeiAmount(data.total_gross_prm);
+    value = formatPrmWeiShort(data.total_gross_prm);
     sub = `≈ ${formatUsdCents(data.total_usd_cents)} net`;
     subColor = "#F59E0B";
   }

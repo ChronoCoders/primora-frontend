@@ -53,10 +53,6 @@ export function rpcUrlFor(chain: ViemChain): string {
   return chain.rpcUrls.default.http[0];
 }
 
-/// Known non-functional WalletConnect projectId values. Any of these (or an empty
-/// value) makes WalletConnect's explorer fetch return no listings, so its internal
-/// `Object.values(listings)` throws and the page crashes with a full-screen overlay.
-/// A real id must come from https://cloud.walletconnect.com.
 const PLACEHOLDER_PROJECT_IDS = new Set([
   "",
   "PRIMORA_DEMO",
@@ -75,13 +71,6 @@ if (typeof window !== "undefined" && PLACEHOLDER_PROJECT_IDS.has(rawProjectId)) 
   );
 }
 
-/// Explicit wallet list. `getDefaultConfig`'s default list leads with the
-/// SDK-based `metaMaskWallet`, which on desktop silently no-ops (clicking it
-/// never reaches the injected provider, so no extension popup fires). Leading
-/// with `injectedWallet` connects through `window.ethereum` directly, which
-/// reliably triggers the installed MetaMask popup. `walletConnectWallet` is kept
-/// so WalletConnect (and mobile/QR) still works — `getDefaultConfig` wires the
-/// projectId into it exactly as before.
 const wallets = [
   {
     groupName: "Installed",
@@ -93,8 +82,6 @@ const wallets = [
   },
 ];
 
-/// Shared wagmi + RainbowKit config. Transports are pinned per chain id so each
-/// chain reads from its own RPC.
 export const wagmiConfig = getDefaultConfig({
   appName: "Primora",
   projectId,
@@ -104,5 +91,6 @@ export const wagmiConfig = getDefaultConfig({
     [ethereumChain.id]: http(rpcUrlFor(ethereumChain)),
     [polygonChain.id]: http(rpcUrlFor(polygonChain)),
   },
+  multiInjectedProviderDiscovery: false,
   ssr: true,
 });

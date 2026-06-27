@@ -31,6 +31,10 @@ export type SessionSummary = {
   client_type: string;
   /// CPU worker threads reported by the client; 0 if not reported.
   cpu_threads: number;
+  /// Submitted proofs that passed pre-filter validation (not full attestation).
+  verified_proof_count: number;
+  /// Submitted proofs rejected by pre-filter validation.
+  rejected_proof_count: number;
   status: string;
   started_at: string;
   last_submission_at: string | null;

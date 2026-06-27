@@ -909,9 +909,21 @@ function ActiveMining() {
       </div>
 
       <div style={{ paddingTop: "14px", borderTop: "1px solid #1f1f1f", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ color: "#4ade80", display: "flex", alignItems: "center", gap: "6px", fontSize: "11px" }}>
-          <span className="pulse" style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />Mining in progress
-        </span>
+        {active.rejected_proof_count > 0 ? (
+          <span style={{ color: "#F59E0B", display: "flex", alignItems: "center", gap: "6px", fontSize: "11px" }}>
+            <i className="fa-solid fa-triangle-exclamation" style={{ fontSize: "11px" }} />
+            {active.verified_proof_count} verified · {active.rejected_proof_count} rejected
+          </span>
+        ) : active.verified_proof_count > 0 ? (
+          <span style={{ color: "#4ade80", display: "flex", alignItems: "center", gap: "6px", fontSize: "11px" }}>
+            <i className="fa-solid fa-circle-check" style={{ fontSize: "11px" }} />
+            Verified clean · {active.verified_proof_count} verified
+          </span>
+        ) : (
+          <span style={{ color: "#52525b", display: "flex", alignItems: "center", gap: "6px", fontSize: "11px" }}>
+            <span className="pulse" style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#52525b", display: "inline-block" }} />Awaiting proofs
+          </span>
+        )}
         <Link href="/mine" style={{ fontSize: "11px", color: "#F59E0B", textDecoration: "none", fontWeight: 600 }}>Open Mine →</Link>
       </div>
     </div>

@@ -2,11 +2,32 @@
 
 import { usePathname } from "next/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useAccount, useBalance } from "wagmi";
+import { formatUnits } from "viem";
 import { titleForPath } from "@/lib/nav";
+
+function formatNativeBalance(
+  value: bigint,
+  decimals: number,
+  symbol: string,
+): string {
+  const amount = Number(formatUnits(value, decimals));
+  if (!Number.isFinite(amount)) return `0 ${symbol}`;
+  return `${amount.toLocaleString(undefined, { maximumFractionDigits: 4 })} ${symbol}`;
+}
 
 export function TopBar() {
   const pathname = usePathname();
   const title = titleForPath(pathname);
+
+  const { address, isConnected } = useAccount();
+  const { data: balance } = useBalance({ address });
+
+  const balanceLabel = !isConnected
+    ? null
+    : balance
+      ? formatNativeBalance(balance.value, balance.decimals, balance.symbol)
+      : "…";
 
   return (
     <div className="flex h-[73px] shrink-0 items-center justify-between border-b border-primora-border bg-primora-bg px-6">
@@ -27,7 +48,12 @@ export function TopBar() {
             All mining is virtual. No real commodities.
           </span>
         </div>
-        <ConnectButton />
+        {balanceLabel && (
+          <span className="rounded-full border border-[#2a2a2a] bg-[#111] px-3 py-1.5 text-[11px] font-medium text-primora-text">
+            {balanceLabel}
+          </span>
+        )}
+        <ConnectButton showBalance={false} />
       </div>
     </div>
   );

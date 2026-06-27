@@ -586,14 +586,63 @@ function StakingCard() {
   );
 }
 
+function ethereumLockLabel(chains: ChainStake[]): string | null {
+  const eth = chains.find((c) => c.chain === "ethereum" && c.active);
+  if (!eth) return null;
+  return STAKING_LOCK_LABELS[eth.lock_period] ?? null;
+}
+
+function TotalStakedKpi() {
+  const { address, isConnected } = useAccount();
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["staking", address],
+    queryFn: () => {
+      if (!address) throw new Error("wallet not connected");
+      return getStaking(address);
+    },
+    enabled: isConnected && Boolean(address),
+  });
+
+  let value = "—";
+  let sub: ReactNode = null;
+  if (!isConnected) {
+    value = "—";
+  } else if (isLoading) {
+    value = "…";
+  } else if (isError || !data) {
+    value = "—";
+  } else {
+    value = formatPrmWeiAmount(data.total_staked);
+    const pct = data.effective_boost_bps / 100;
+    const pctStr = Number.isInteger(pct) ? pct.toString() : pct.toFixed(1);
+    const lock = ethereumLockLabel(data.chains);
+    sub = lock ? `+${pctStr}% boost · ${lock}` : `+${pctStr}% boost`;
+  }
+
+  return (
+    <KpiCard
+      kpi={{
+        label: "Total Staked",
+        value,
+        sub,
+        subColor: sub ? "#4ade80" : undefined,
+      }}
+    />
+  );
+}
+
 export default function OverviewPage() {
   return (
     <>
       {/* KPI row */}
       <div className="kpi-grid">
-        {PLACEHOLDER_KPIS.map((kpi) => (
-          <KpiCard key={kpi.label} kpi={kpi} />
-        ))}
+        {PLACEHOLDER_KPIS.map((kpi) =>
+          kpi.label === "Total Staked" ? (
+            <TotalStakedKpi key={kpi.label} />
+          ) : (
+            <KpiCard key={kpi.label} kpi={kpi} />
+          ),
+        )}
       </div>
 
       {/* Active Mining + Commodity breakdown */}

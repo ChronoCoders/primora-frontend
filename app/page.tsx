@@ -115,33 +115,39 @@ function commodityMeta(commodity: string): CommodityMeta {
   );
 }
 
-function prmToBig(value: string): bigint {
-  try {
-    return BigInt(value.split(".")[0] || "0");
-  } catch {
-    return 0n;
-  }
-}
-
 const STAKING_REVENUE_SHARE = "20% of platform fees";
 const STAKING_WEEKLY_REWARD = "—";
 const STAKING_MAX_BOOST_BPS = 4000;
 const STAKING_LOCK_LABELS: Record<number, string> = { 0: "30d", 1: "90d", 2: "180d" };
 const PRM_DECIMALS = 18n;
 
-function formatPrmWei(weiStr: string): string {
+function formatPrmWeiAmount(weiStr: string): string {
   let wei: bigint;
   try {
     wei = BigInt(weiStr);
   } catch {
-    return `${weiStr} PRM`;
+    return weiStr;
   }
   const scale = 10n ** PRM_DECIMALS;
   const grouped = (wei / scale).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   const remainder = wei % scale;
-  if (remainder === 0n) return `${grouped} PRM`;
-  const frac = ((remainder * 100n) / scale).toString().padStart(2, "0").replace(/0+$/, "");
-  return frac.length > 0 ? `${grouped}.${frac} PRM` : `${grouped} PRM`;
+  if (remainder === 0n) return grouped;
+  const frac = ((remainder * 10000n) / scale).toString().padStart(4, "0").replace(/0+$/, "");
+  return frac.length > 0 ? `${grouped}.${frac}` : grouped;
+}
+
+function formatPrmWei(weiStr: string): string {
+  return `${formatPrmWeiAmount(weiStr)} PRM`;
+}
+
+function formatUsdCents(cents: number | null | undefined): string {
+  if (cents == null) return "—";
+  const c = BigInt(cents);
+  const sign = c < 0n ? "-" : "";
+  const abs = c < 0n ? -c : c;
+  const dollars = (abs / 100n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const rem = (abs % 100n).toString().padStart(2, "0");
+  return `${sign}$${dollars}.${rem}`;
 }
 
 function formatBoost(bps: number): string {
@@ -224,13 +230,6 @@ const shortDate = new Intl.DateTimeFormat("en-US", {
 function formatDate(iso: string): string {
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? iso : shortDate.format(d);
-}
-
-function formatPrm(value: string): string {
-  const [intPart, frac] = value.split(".");
-  if (!/^\d+$/.test(intPart)) return value;
-  const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  return frac ? `${grouped}.${frac}` : grouped;
 }
 
 type Badge = { label: string; bg: string; color: string };
@@ -387,8 +386,8 @@ function RecentPayouts() {
                   <td style={{ padding: "10px 0" }}>
                     <span style={{ fontSize: "10px", padding: "2px 6px", background: chain.bg, color: chain.color, borderRadius: "4px", fontWeight: 700 }}>{chain.label}</span>
                   </td>
-                  <td style={{ padding: "10px 0", textAlign: "right", fontFamily: "monospace", fontWeight: 600 }}>{formatPrm(row.gross_prm)}</td>
-                  <td style={{ padding: "10px 0", textAlign: "right", color: "#52525b" }}>—</td>
+                  <td style={{ padding: "10px 0", textAlign: "right", fontFamily: "monospace", fontWeight: 600 }}>{formatPrmWeiAmount(row.gross_prm)}</td>
+                  <td style={{ padding: "10px 0", textAlign: "right", ...(row.net_usd_cents == null ? { color: "#52525b" } : { fontWeight: 700, color: "#4ade80" }) }}>{formatUsdCents(row.net_usd_cents)}</td>
                   <td style={{ padding: "10px 0", textAlign: "right", color: "#52525b" }}>—</td>
                 </tr>
               );
@@ -462,11 +461,11 @@ function EarningsByCommodity() {
   const rows: EarningsRow[] = [...(data ?? [])].sort(
     (a, b) => commodityOrderIndex(a.commodity) - commodityOrderIndex(b.commodity),
   );
-  const total = rows.reduce((acc, r) => acc + prmToBig(r.total_gross_prm), 0n);
+  const totalUsdCents = rows.reduce((acc, r) => acc + BigInt(r.total_usd_cents), 0n);
 
-  function sharePct(value: string): number {
-    if (total === 0n) return 0;
-    return Number((prmToBig(value) * 10000n) / total) / 100;
+  function sharePct(cents: number): number {
+    if (totalUsdCents === 0n) return 0;
+    return Number((BigInt(cents) * 10000n) / totalUsdCents) / 100;
   }
 
   const message = !isConnected
@@ -508,12 +507,12 @@ function EarningsByCommodity() {
                   </td>
                   <td style={{ padding: padCell }}>
                     <div className="prog-wrap" style={{ marginTop: 0 }}>
-                      <div className="prog-bar" style={{ width: `${sharePct(row.total_gross_prm)}%`, background: meta.color }} />
+                      <div className="prog-bar" style={{ width: `${sharePct(row.total_usd_cents)}%`, background: meta.color }} />
                     </div>
                   </td>
                   <td style={{ padding: padCell, textAlign: "right", whiteSpace: "nowrap", width: first ? "120px" : undefined }}>
-                    <span style={{ fontSize: "13px", fontWeight: 600 }}>{formatPrm(row.total_gross_prm)}</span>
-                    <span style={{ fontSize: "10px", color: "#52525b", marginLeft: "4px" }}>PRM</span>
+                    <span style={{ fontSize: "13px", fontWeight: 600 }}>{formatUsdCents(row.total_usd_cents)}</span>
+                    <span style={{ fontSize: "10px", color: "#52525b", marginLeft: "4px" }}>{formatPrmWeiAmount(row.total_gross_prm)} PRM</span>
                   </td>
                 </tr>
               );
@@ -522,7 +521,7 @@ function EarningsByCommodity() {
         </table>
       )}
       <div style={{ paddingTop: "12px", borderTop: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", fontSize: "12px", marginTop: "10px" }}>
-        <span style={{ color: "#71717a" }}>Gross PRM · before 17% platform fee</span>
+        <span style={{ color: "#71717a" }}>All figures net of 17% platform fee</span>
         <Link href="/my-mining" style={{ color: "#F59E0B", textDecoration: "none", fontWeight: 600 }}>Full history →</Link>
       </div>
     </div>

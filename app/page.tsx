@@ -4,7 +4,7 @@ import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 import { useQuery } from "@tanstack/react-query";
-import { getPayouts, getStaking, getEarnings, type PayoutRow, type ChainStake, type EarningsRow } from "@/lib/api";
+import { getPayouts, getStaking, getEarnings, getSessions, type PayoutRow, type ChainStake, type EarningsRow, type SessionSummary } from "@/lib/api";
 import { chainLabel, chainIdFor, type Chain } from "@/lib/chain";
 import { publicClientFor } from "@/lib/clients";
 import { getContract } from "@/lib/contracts";
@@ -74,17 +74,6 @@ const PLACEHOLDER_KPIS: Kpi[] = [
     progress: { pct: 100, color: "#4ade80" },
   },
 ];
-
-const PLACEHOLDER_ACTIVE_MINING = {
-  hashrate: "3,842",
-  source: "Desktop App · 16 threads",
-  stats: [
-    { label: "Commodity", value: "Gold", valueColor: "#D4A847", sub: "XAU · 4.0x diff", subColor: "#D4A847" },
-    { label: "Est. Net Today", value: "$15.31", valueColor: "#4ade80", sub: "after 17% fee", subColor: "#52525b" },
-    { label: "Staking Boost", value: "+40%", valueColor: "#F59E0B", sub: "Max · 180d lock", subColor: "#52525b" },
-    { label: "Site", value: "JHB", valueColor: undefined, sub: "Johannesburg", subColor: "#52525b" },
-  ],
-};
 
 type CommodityMeta = {
   symbol?: string;
@@ -744,12 +733,152 @@ function ReserveHealth() {
   );
 }
 
+function pickActiveSession(sessions: SessionSummary[] | undefined): SessionSummary | null {
+  if (!sessions || sessions.length === 0) return null;
+  return [...sessions].sort((a, b) => (a.started_at < b.started_at ? 1 : -1))[0];
+}
+
+function clientLabel(clientType: string): string {
+  if (clientType === "desktop") return "Desktop App";
+  if (clientType === "browser") return "Browser";
+  if (clientType === "cli") return "CLI";
+  return clientType;
+}
+
+function MiningSpeedKpi() {
+  const { address, isConnected } = useAccount();
+  const { data, isLoading } = useQuery({
+    queryKey: ["sessions", address],
+    queryFn: () => {
+      if (!address) throw new Error("wallet not connected");
+      return getSessions(address);
+    },
+    enabled: isConnected && Boolean(address),
+  });
+  const active = pickActiveSession(data);
+
+  let value = "—";
+  let sub: ReactNode = "Not mining";
+  let valueColor: string | undefined;
+  if (!isConnected) {
+    value = "—";
+    sub = "Not mining";
+  } else if (isLoading) {
+    value = "…";
+    sub = "H/s";
+  } else if (active) {
+    value = active.avg_hashrate.toLocaleString("en-US");
+    valueColor = "#4ade80";
+    sub = `H/s · ${clientLabel(active.client_type)}`;
+  }
+
+  return <KpiCard kpi={{ label: "Mining Speed", value, valueColor, sub }} />;
+}
+
+function ActiveMining() {
+  const { address, isConnected } = useAccount();
+  const { data: sessions, isLoading } = useQuery({
+    queryKey: ["sessions", address],
+    queryFn: () => {
+      if (!address) throw new Error("wallet not connected");
+      return getSessions(address);
+    },
+    enabled: isConnected && Boolean(address),
+  });
+  const { data: staking } = useQuery({
+    queryKey: ["staking", address],
+    queryFn: () => {
+      if (!address) throw new Error("wallet not connected");
+      return getStaking(address);
+    },
+    enabled: isConnected && Boolean(address),
+  });
+  const active = pickActiveSession(sessions);
+
+  if (!isConnected || (!isLoading && !active)) {
+    return (
+      <div className="card" style={{ padding: "22px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+          <i className="fa-solid fa-microchip" style={{ color: "#52525b", fontSize: "13px" }} />
+          <span style={{ fontSize: "15px", fontWeight: 600 }}>Active Mining</span>
+        </div>
+        <div style={{ padding: "20px 0", textAlign: "center", color: "#52525b", fontSize: "12px" }}>
+          {isConnected ? "No active mining session" : "Connect your wallet to see mining"}
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <Link href="/mine" style={{ fontSize: "11px", color: "#F59E0B", textDecoration: "none", fontWeight: 600 }}>Start mining →</Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading || !active) {
+    return (
+      <div className="card" style={{ padding: "22px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+          <i className="fa-solid fa-microchip" style={{ color: "#52525b", fontSize: "13px" }} />
+          <span style={{ fontSize: "15px", fontWeight: 600 }}>Active Mining</span>
+        </div>
+        <div style={{ padding: "20px 0", textAlign: "center", color: "#52525b", fontSize: "12px" }}>Loading…</div>
+      </div>
+    );
+  }
+
+  const meta = commodityMeta(active.commodity);
+  const boostText = staking ? formatBoost(staking.effective_boost_bps) : "…";
+
+  return (
+    <div className="card" style={{ padding: "22px" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "18px" }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+            <i className="fa-solid fa-microchip" style={{ color: "#4ade80", fontSize: "13px" }} />
+            <span style={{ fontSize: "15px", fontWeight: 600 }}>Active Mining</span>
+            <span style={{ fontSize: "9px", padding: "2px 6px", background: "rgba(34,197,94,.1)", color: "#4ade80", borderRadius: "4px", fontWeight: 700 }}>LIVE</span>
+          </div>
+          <div style={{ fontSize: "12px", color: "#4ade80" }}>{clientLabel(active.client_type)}</div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div className="tabnum font-display" style={{ fontSize: "36px", fontWeight: 700 }}>{active.avg_hashrate.toLocaleString("en-US")}</div>
+          <div style={{ fontSize: "11px", color: "#4ade80" }}>H/s avg</div>
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "14px", marginBottom: "18px" }}>
+        <div>
+          <div style={labelStyle}>Commodity</div>
+          <div style={{ fontSize: "16px", fontWeight: 700, color: meta.color }}>{meta.name}</div>
+          <div style={{ ...subStyle, color: meta.color }}>{meta.difficulty} diff</div>
+        </div>
+        <div>
+          <div style={labelStyle}>Staking Boost</div>
+          <div style={{ fontSize: "16px", fontWeight: 700, color: "#F59E0B" }}>{boostText}</div>
+          <div style={{ ...subStyle, color: "#52525b" }}>effective</div>
+        </div>
+        <div>
+          <div style={labelStyle}>Proofs</div>
+          <div style={{ fontSize: "16px", fontWeight: 700 }}>{active.proof_count}</div>
+          <div style={{ ...subStyle, color: "#52525b" }}>submitted</div>
+        </div>
+      </div>
+
+      <div style={{ paddingTop: "14px", borderTop: "1px solid #1f1f1f", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ color: "#4ade80", display: "flex", alignItems: "center", gap: "6px", fontSize: "11px" }}>
+          <span className="pulse" style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />Mining in progress
+        </span>
+        <Link href="/mine" style={{ fontSize: "11px", color: "#F59E0B", textDecoration: "none", fontWeight: 600 }}>Open Mine →</Link>
+      </div>
+    </div>
+  );
+}
+
 export default function OverviewPage() {
   return (
     <>
       {/* KPI row */}
       <div className="kpi-grid">
         {PLACEHOLDER_KPIS.map((kpi) => {
+          if (kpi.label === "Mining Speed") return <MiningSpeedKpi key={kpi.label} />;
           if (kpi.label === "Total Staked") return <TotalStakedKpi key={kpi.label} />;
           if (kpi.label === "Reserve Ratio") return <ReserveRatioKpi key={kpi.label} />;
           return <KpiCard key={kpi.label} kpi={kpi} />;
@@ -758,48 +887,7 @@ export default function OverviewPage() {
 
       {/* Active Mining + Commodity breakdown */}
       <div className="two-col">
-        <div className="card" style={{ padding: "22px" }}>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "18px" }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                <i className="fa-solid fa-microchip" style={{ color: "#4ade80", fontSize: "13px" }} />
-                <span style={{ fontSize: "15px", fontWeight: 600 }}>Active Mining</span>
-                <span style={{ fontSize: "9px", padding: "2px 6px", background: "rgba(34,197,94,.1)", color: "#4ade80", borderRadius: "4px", fontWeight: 700 }}>LIVE</span>
-              </div>
-              <div style={{ fontSize: "12px", color: "#4ade80" }}>{PLACEHOLDER_ACTIVE_MINING.source}</div>
-            </div>
-            <div style={{ textAlign: "right" }}>
-              <div className="tabnum font-display" style={{ fontSize: "36px", fontWeight: 700 }}>{PLACEHOLDER_ACTIVE_MINING.hashrate}</div>
-              <div style={{ fontSize: "11px", color: "#4ade80" }}>H/s</div>
-            </div>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "14px", marginBottom: "18px" }}>
-            {PLACEHOLDER_ACTIVE_MINING.stats.map((stat) => (
-              <div key={stat.label}>
-                <div style={labelStyle}>{stat.label}</div>
-                <div style={{ fontSize: "16px", fontWeight: 700, ...(stat.valueColor ? { color: stat.valueColor } : {}) }}>{stat.value}</div>
-                <div style={{ ...subStyle, color: stat.subColor }}>{stat.sub}</div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ paddingTop: "14px", borderTop: "1px solid #1f1f1f", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
-              <span style={{ color: "#4ade80", display: "flex", alignItems: "center", gap: "4px" }}>
-                <i className="fa-solid fa-circle-check" style={{ fontSize: "9px" }} />Verified clean
-              </span>
-            </div>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button type="button" style={{ padding: "6px 14px", background: "#059669", color: "#fff", borderRadius: "10px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", gap: "5px" }}>
-                <i className="fa-solid fa-pause" style={{ fontSize: "9px" }} />Pause
-              </button>
-              <button type="button" style={{ padding: "6px 14px", background: "#1f1f1f", color: "#e4e4e7", borderRadius: "10px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                Restart
-              </button>
-            </div>
-          </div>
-        </div>
+        <ActiveMining />
 
         <EarningsByCommodity />
       </div>

@@ -1,6 +1,7 @@
 import type { Address } from "viem";
 import localDeployment from "./deployments/local.json";
 import polygonDeployment from "./deployments/polygon.json";
+import { ethereumChain, polygonChain } from "./wagmi";
 
 /// The set of contracts the frontend reads on-chain.
 export type ContractName =
@@ -62,15 +63,13 @@ const mainnet: ContractAddresses = {
 /// Polygon mainnet (chain id 137) placeholders until contracts are deployed.
 const polygon: ContractAddresses = { ...mainnet };
 
-/// Contract addresses keyed by chain id. Both modes use ids 1 and 137; the
-/// `NEXT_PUBLIC_USE_LOCAL_CHAINS` flag (shared with `lib/wagmi.ts`) swaps the
-/// whole environment between the local dual-Anvil deploys and the
-/// (not-yet-deployed) mainnet/Polygon sets. Real chain id 1 and 137 deployments
-/// will have DIFFERENT addresses; the registry is keyed by chainId so it is
-/// ready for them.
+/// Contract addresses keyed by the active chain ids (local 31337/31338,
+/// production 1/137), taken from `lib/wagmi.ts` so the keys always match the
+/// configured chains. The `NEXT_PUBLIC_USE_LOCAL_CHAINS` flag selects the local
+/// dual-Anvil deploys or the (not-yet-deployed) mainnet/Polygon sets.
 export const addresses: Record<number, ContractAddresses> = useLocalChains
-  ? { 1: localEthereum, 137: localPolygon }
-  : { 1: mainnet, 137: polygon };
+  ? { [ethereumChain.id]: localEthereum, [polygonChain.id]: localPolygon }
+  : { [ethereumChain.id]: mainnet, [polygonChain.id]: polygon };
 
 /// Returns the address registry for `chainId`, or `undefined` if unsupported.
 export function addressesForChain(

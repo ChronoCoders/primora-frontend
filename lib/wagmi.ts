@@ -1,4 +1,10 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import {
+  injectedWallet,
+  metaMaskWallet,
+  walletConnectWallet,
+  coinbaseWallet,
+} from "@rainbow-me/rainbowkit/wallets";
 import { http } from "wagmi";
 import { mainnet, polygon } from "wagmi/chains";
 import { defineChain, type Chain as ViemChain } from "viem";
@@ -69,11 +75,30 @@ if (typeof window !== "undefined" && PLACEHOLDER_PROJECT_IDS.has(rawProjectId)) 
   );
 }
 
+/// Explicit wallet list. `getDefaultConfig`'s default list leads with the
+/// SDK-based `metaMaskWallet`, which on desktop silently no-ops (clicking it
+/// never reaches the injected provider, so no extension popup fires). Leading
+/// with `injectedWallet` connects through `window.ethereum` directly, which
+/// reliably triggers the installed MetaMask popup. `walletConnectWallet` is kept
+/// so WalletConnect (and mobile/QR) still works — `getDefaultConfig` wires the
+/// projectId into it exactly as before.
+const wallets = [
+  {
+    groupName: "Installed",
+    wallets: [injectedWallet, metaMaskWallet],
+  },
+  {
+    groupName: "Other",
+    wallets: [walletConnectWallet, coinbaseWallet],
+  },
+];
+
 /// Shared wagmi + RainbowKit config. Transports are pinned per chain id so each
 /// chain reads from its own RPC.
 export const wagmiConfig = getDefaultConfig({
   appName: "Primora",
   projectId,
+  wallets,
   chains,
   transports: {
     [ethereumChain.id]: http(rpcUrlFor(ethereumChain)),

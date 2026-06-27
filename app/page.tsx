@@ -8,6 +8,7 @@ import { getPayouts, getStaking, getEarnings, type PayoutRow, type ChainStake, t
 import { chainLabel, chainIdFor, type Chain } from "@/lib/chain";
 import { publicClientFor } from "@/lib/clients";
 import { getContract } from "@/lib/contracts";
+import { PRM_REFERENCE_PRICE_8DEC } from "@/lib/constants";
 
 /*
  * Overview page content. All values below are PLACEHOLDER and hardcoded to match
@@ -208,17 +209,51 @@ async function readOraclePrices(): Promise<Record<number, bigint | null>> {
   return prices;
 }
 
-const PLACEHOLDER_RESERVE = {
-  ratio: "168%",
-  status: "Healthy · above 150%",
-  thresholds: [
-    { color: "#4ade80", range: "Above 150%", label: "Healthy", labelColor: "#4ade80", labelWeight: 600 },
-    { color: "#F59E0B", range: "120-150%", label: "Caution", labelColor: "#52525b", labelWeight: 400 },
-    { color: "#f97316", range: "100-120%", label: "Stake paused", labelColor: "#52525b", labelWeight: 400 },
-    { color: "#ef4444", range: "Below 100%", label: "All paused", labelColor: "#52525b", labelWeight: 400 },
-  ],
-  houseEdge: "17% · default",
-};
+const RESERVE_THRESHOLDS = [
+  { color: "#4ade80", range: "Above 150%", label: "Healthy", labelColor: "#4ade80", labelWeight: 600 },
+  { color: "#F59E0B", range: "120-150%", label: "Caution", labelColor: "#52525b", labelWeight: 400 },
+  { color: "#f97316", range: "100-120%", label: "Stake paused", labelColor: "#52525b", labelWeight: 400 },
+  { color: "#ef4444", range: "Below 100%", label: "All paused", labelColor: "#52525b", labelWeight: 400 },
+];
+
+type ReserveData = { reserveUsd: bigint; edgeBps: bigint; ratioBps: bigint | null };
+
+async function readReserve(): Promise<ReserveData> {
+  const client = publicClientFor("ethereum");
+  const eth = chainIdFor("ethereum");
+  const prim = getContract(eth, "primToken");
+  const treasury = getContract(eth, "treasury");
+  const houseEdge = getContract(eth, "houseEdge");
+
+  const [totalSupply, reserveUsd, edgeBps] = (await Promise.all([
+    client.readContract({ address: prim.address, abi: prim.abi, functionName: "totalSupply" }),
+    client.readContract({ address: treasury.address, abi: treasury.abi, functionName: "totalReserveUsd" }),
+    client.readContract({ address: houseEdge.address, abi: houseEdge.abi, functionName: "currentEdgeBps" }),
+  ])) as [bigint, bigint, bigint];
+
+  const prmCirculatingValueUsd6 = (totalSupply * PRM_REFERENCE_PRICE_8DEC) / 10n ** 20n;
+  let ratioBps: bigint | null = null;
+  if (prmCirculatingValueUsd6 > 0n) {
+    ratioBps = (await client.readContract({
+      address: treasury.address,
+      abi: treasury.abi,
+      functionName: "reserveRatioBps",
+      args: [prmCirculatingValueUsd6],
+    })) as bigint;
+  }
+  return { reserveUsd, edgeBps, ratioBps };
+}
+
+function reserveHealth(ratioBps: bigint): { label: string; color: string } {
+  if (ratioBps >= 15_000n) return { label: "Healthy · above 150%", color: "#4ade80" };
+  if (ratioBps >= 12_000n) return { label: "Caution · 120-150%", color: "#F59E0B" };
+  if (ratioBps >= 10_000n) return { label: "Stake paused · 100-120%", color: "#f97316" };
+  return { label: "All paused · below 100%", color: "#ef4444" };
+}
+
+function formatEdge(edgeBps: bigint): string {
+  return `${edgeBps / 100n}%${edgeBps === 1_700n ? " · default" : ""}`;
+}
 
 const PAYOUT_LIMIT = 5;
 
@@ -631,18 +666,94 @@ function TotalStakedKpi() {
   );
 }
 
+function ReserveRatioKpi() {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["reserve"],
+    queryFn: readReserve,
+    refetchInterval: 60_000,
+  });
+
+  let value = "—";
+  let valueColor: string | undefined;
+  let sub: ReactNode = null;
+  let progress: { pct: number; color: string } | undefined;
+  if (isLoading) {
+    value = "…";
+  } else if (isError || !data || data.ratioBps == null) {
+    value = "—";
+  } else {
+    const h = reserveHealth(data.ratioBps);
+    value = `${data.ratioBps / 100n}%`;
+    valueColor = h.color;
+    sub = h.label;
+    progress = { pct: Math.min(100, Number(data.ratioBps) / 150), color: h.color };
+  }
+
+  return (
+    <KpiCard
+      kpi={{ label: "Reserve Ratio", value, valueColor, sub, subColor: valueColor, progress }}
+    />
+  );
+}
+
+function ReserveHealth() {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["reserve"],
+    queryFn: readReserve,
+    refetchInterval: 60_000,
+  });
+
+  const ratioBps = data?.ratioBps ?? null;
+  const health = ratioBps != null ? reserveHealth(ratioBps) : null;
+  const ratioText = isLoading ? "…" : ratioBps == null ? "—" : `${ratioBps / 100n}%`;
+  const ratioColor = health?.color ?? "#52525b";
+  const statusText = isLoading
+    ? ""
+    : health
+      ? health.label
+      : isError
+        ? "unavailable"
+        : "no PRM minted yet";
+  const edgeText = isLoading ? "…" : data ? formatEdge(data.edgeBps) : "—";
+
+  return (
+    <div className="card" style={{ padding: "20px" }}>
+      <div style={{ fontWeight: 600, fontSize: "14px", marginBottom: "14px" }}>Reserve Health</div>
+      <div style={{ textAlign: "center", marginBottom: "14px" }}>
+        <div className="tabnum font-display" style={{ fontSize: "40px", fontWeight: 700, color: ratioColor }}>{ratioText}</div>
+        <div style={{ fontSize: "12px", color: ratioColor, marginTop: "4px" }}>{statusText}</div>
+      </div>
+      <table style={{ width: "100%", fontSize: "11px", borderCollapse: "collapse" }}>
+        <tbody>
+          {RESERVE_THRESHOLDS.map((t, i) => (
+            <tr key={t.range}>
+              <td style={{ padding: "3px 0", width: i === 0 ? "14px" : undefined }}>
+                <span style={{ color: t.color, fontSize: "8px" }}>■</span>
+              </td>
+              <td style={{ padding: "3px 0", color: "#71717a", width: i === 0 ? "70px" : undefined }}>{t.range}</td>
+              <td style={{ padding: "3px 0", textAlign: "right", color: t.labelColor, fontWeight: t.labelWeight }}>{t.label}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div style={{ marginTop: "12px", paddingTop: "10px", borderTop: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", fontSize: "11px" }}>
+        <span style={{ color: "#71717a" }}>House edge</span>
+        <span style={{ fontWeight: 600 }}>{edgeText}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function OverviewPage() {
   return (
     <>
       {/* KPI row */}
       <div className="kpi-grid">
-        {PLACEHOLDER_KPIS.map((kpi) =>
-          kpi.label === "Total Staked" ? (
-            <TotalStakedKpi key={kpi.label} />
-          ) : (
-            <KpiCard key={kpi.label} kpi={kpi} />
-          ),
-        )}
+        {PLACEHOLDER_KPIS.map((kpi) => {
+          if (kpi.label === "Total Staked") return <TotalStakedKpi key={kpi.label} />;
+          if (kpi.label === "Reserve Ratio") return <ReserveRatioKpi key={kpi.label} />;
+          return <KpiCard key={kpi.label} kpi={kpi} />;
+        })}
       </div>
 
       {/* Active Mining + Commodity breakdown */}
@@ -699,30 +810,7 @@ export default function OverviewPage() {
 
         <OracleNetwork />
 
-        <div className="card" style={{ padding: "20px" }}>
-          <div style={{ fontWeight: 600, fontSize: "14px", marginBottom: "14px" }}>Reserve Health</div>
-          <div style={{ textAlign: "center", marginBottom: "14px" }}>
-            <div className="tabnum font-display" style={{ fontSize: "40px", fontWeight: 700, color: "#4ade80" }}>{PLACEHOLDER_RESERVE.ratio}</div>
-            <div style={{ fontSize: "12px", color: "#4ade80", marginTop: "4px" }}>{PLACEHOLDER_RESERVE.status}</div>
-          </div>
-          <table style={{ width: "100%", fontSize: "11px", borderCollapse: "collapse" }}>
-            <tbody>
-              {PLACEHOLDER_RESERVE.thresholds.map((t, i) => (
-                <tr key={t.range}>
-                  <td style={{ padding: "3px 0", width: i === 0 ? "14px" : undefined }}>
-                    <span style={{ color: t.color, fontSize: "8px" }}>■</span>
-                  </td>
-                  <td style={{ padding: "3px 0", color: "#71717a", width: i === 0 ? "70px" : undefined }}>{t.range}</td>
-                  <td style={{ padding: "3px 0", textAlign: "right", color: t.labelColor, fontWeight: t.labelWeight }}>{t.label}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div style={{ marginTop: "12px", paddingTop: "10px", borderTop: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", fontSize: "11px" }}>
-            <span style={{ color: "#71717a" }}>House edge</span>
-            <span style={{ fontWeight: 600 }}>{PLACEHOLDER_RESERVE.houseEdge}</span>
-          </div>
-        </div>
+        <ReserveHealth />
       </div>
 
       {/* Recent payouts */}

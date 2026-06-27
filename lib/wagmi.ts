@@ -47,8 +47,27 @@ export function rpcUrlFor(chain: ViemChain): string {
   return chain.rpcUrls.default.http[0];
 }
 
-const projectId =
-  process.env.NEXT_PUBLIC_WC_PROJECT_ID ?? "PRIMORA_DEV_PLACEHOLDER";
+/// Known non-functional WalletConnect projectId values. Any of these (or an empty
+/// value) makes WalletConnect's explorer fetch return no listings, so its internal
+/// `Object.values(listings)` throws and the page crashes with a full-screen overlay.
+/// A real id must come from https://cloud.walletconnect.com.
+const PLACEHOLDER_PROJECT_IDS = new Set([
+  "",
+  "PRIMORA_DEMO",
+  "PRIMORA_DEV_PLACEHOLDER",
+]);
+
+const rawProjectId = process.env.NEXT_PUBLIC_WC_PROJECT_ID ?? "";
+const projectId = rawProjectId || "PRIMORA_DEV_PLACEHOLDER";
+
+if (typeof window !== "undefined" && PLACEHOLDER_PROJECT_IDS.has(rawProjectId)) {
+  console.error(
+    `[primora] NEXT_PUBLIC_WC_PROJECT_ID is missing or a placeholder ("${projectId}"). ` +
+      "WalletConnect's wallet-listing fetch will fail and the page will crash with an " +
+      "Object.values error. Set a real id from https://cloud.walletconnect.com in " +
+      ".env.local and restart the dev server.",
+  );
+}
 
 /// Shared wagmi + RainbowKit config. Transports are pinned per chain id so each
 /// chain reads from its own RPC.

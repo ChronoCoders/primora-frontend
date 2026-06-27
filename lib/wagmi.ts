@@ -1,9 +1,7 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import {
   injectedWallet,
-  metaMaskWallet,
   walletConnectWallet,
-  coinbaseWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 import { http } from "wagmi";
 import { mainnet, polygon } from "wagmi/chains";
@@ -75,11 +73,11 @@ if (typeof window !== "undefined" && PLACEHOLDER_PROJECT_IDS.has(rawProjectId)) 
 const wallets = [
   {
     groupName: "Installed",
-    wallets: [injectedWallet, metaMaskWallet],
+    wallets: [injectedWallet],
   },
   {
     groupName: "Other",
-    wallets: [walletConnectWallet, coinbaseWallet],
+    wallets: [walletConnectWallet],
   },
 ];
 

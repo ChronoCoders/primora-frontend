@@ -41,19 +41,25 @@ export function TopBar() {
         </div>
       </div>
 
-      <div className="flex items-center gap-[10px]">
-        <div className="flex max-w-[280px] items-center gap-2 rounded-full border border-[#2a2a2a] bg-[#111] px-3 py-1.5">
+      <div className="flex min-w-0 flex-nowrap items-center gap-[10px]">
+        <div className="hidden min-w-0 items-center gap-2 rounded-full border border-[#2a2a2a] bg-[#111] px-3 py-1.5 lg:flex">
           <i className="fa-solid fa-shield-halved shrink-0 text-[11px] text-primora-accent" />
           <span className="truncate text-[10px] text-primora-muted">
             All mining is virtual. No real commodities.
           </span>
         </div>
         {balanceLabel && (
-          <span className="rounded-full border border-[#2a2a2a] bg-[#111] px-3 py-1.5 text-[11px] font-medium text-primora-text">
+          <span className="shrink-0 whitespace-nowrap rounded-full border border-[#2a2a2a] bg-[#111] px-3 py-1.5 text-[11px] font-medium text-primora-text">
             {balanceLabel}
           </span>
         )}
-        <ConnectButton showBalance={false} />
+        <div className="shrink-0">
+          <ConnectButton
+            chainStatus="icon"
+            accountStatus="address"
+            showBalance={false}
+          />
+        </div>
       </div>
     </div>
   );

@@ -508,41 +508,41 @@ function EarningsByCommodity() {
       {message ? (
         <div style={{ padding: "28px 0", textAlign: "center", color: "#52525b", fontSize: "12px" }}>{message}</div>
       ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <tbody>
-            {rows.map((row, i) => {
-              const meta = commodityMeta(row.commodity);
-              const first = i === 0;
-              const last = i === rows.length - 1;
-              const padV = first ? "0 0 10px 0" : last ? "10px 0 0 0" : "10px 0";
-              const padCell = first ? "0 0 10px 12px" : last ? "10px 0 0 12px" : "10px 0 10px 12px";
-              return (
-                <tr key={row.commodity}>
-                  <td style={{ padding: padV, width: first ? "150px" : undefined }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-                      {meta.icon ? (
-                        <i className={`fa-solid ${meta.icon}`} style={{ fontSize: "12px", color: meta.color, width: "13px" }} />
-                      ) : (
-                        <span style={{ fontSize: "13px", fontWeight: 700, color: meta.color, fontFamily: "var(--font-display)" }}>{meta.symbol}</span>
-                      )}
-                      <span style={{ fontSize: "12px", fontWeight: 600 }}>{meta.name}</span>
-                      <span className="comm-tag" style={{ background: meta.multBg, color: meta.color }}>{meta.difficulty}</span>
-                    </div>
-                  </td>
-                  <td style={{ padding: padCell }}>
-                    <div className="prog-wrap" style={{ marginTop: 0 }}>
-                      <div className="prog-bar" style={{ width: `${sharePct(row.total_usd_cents)}%`, background: meta.color }} />
-                    </div>
-                  </td>
-                  <td style={{ padding: padCell, textAlign: "right", whiteSpace: "nowrap", width: first ? "120px" : undefined }}>
-                    <span style={{ fontSize: "13px", fontWeight: 600 }}>{formatUsdCents(row.total_usd_cents)}</span>
-                    <span style={{ fontSize: "10px", color: "#52525b", marginLeft: "4px" }}>{formatPrmWeiAmount(row.total_gross_prm)} PRM</span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <div>
+          {rows.map((row, i) => {
+            const meta = commodityMeta(row.commodity);
+            const first = i === 0;
+            const last = i === rows.length - 1;
+            const padV = first ? "0 0 10px" : last ? "10px 0 0" : "10px 0";
+            return (
+              <div
+                key={row.commodity}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "160px 1fr 72px 104px",
+                  alignItems: "center",
+                  columnGap: "12px",
+                  padding: padV,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "7px", minWidth: 0 }}>
+                  {meta.icon ? (
+                    <i className={`fa-solid ${meta.icon}`} style={{ fontSize: "12px", color: meta.color, width: "13px" }} />
+                  ) : (
+                    <span style={{ fontSize: "13px", fontWeight: 700, color: meta.color, fontFamily: "var(--font-display)" }}>{meta.symbol}</span>
+                  )}
+                  <span style={{ fontSize: "12px", fontWeight: 600 }}>{meta.name}</span>
+                  <span className="comm-tag" style={{ background: meta.multBg, color: meta.color }}>{meta.difficulty}</span>
+                </div>
+                <div className="prog-wrap" style={{ marginTop: 0 }}>
+                  <div className="prog-bar" style={{ width: `${sharePct(row.total_usd_cents)}%`, background: meta.color }} />
+                </div>
+                <span style={{ fontSize: "13px", fontWeight: 600, textAlign: "right" }}>{formatUsdCents(row.total_usd_cents)}</span>
+                <span style={{ fontSize: "10px", color: "#52525b", textAlign: "right", whiteSpace: "nowrap" }}>{formatPrmWeiAmount(row.total_gross_prm)} PRM</span>
+              </div>
+            );
+          })}
+        </div>
       )}
       <div style={{ paddingTop: "12px", borderTop: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", fontSize: "12px", marginTop: "10px" }}>
         <span style={{ color: "#71717a" }}>All figures net of 17% platform fee</span>

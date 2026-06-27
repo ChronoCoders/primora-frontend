@@ -35,6 +35,8 @@ export type SessionSummary = {
   verified_proof_count: number;
   /// Submitted proofs rejected by pre-filter validation.
   rejected_proof_count: number;
+  /// Net USD (cents) earned so far this session (grounded, not a projection); 0 if unavailable.
+  est_net_usd_cents: number;
   status: string;
   started_at: string;
   last_submission_at: string | null;

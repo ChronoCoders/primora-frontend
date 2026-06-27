@@ -890,11 +890,16 @@ function ActiveMining() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "14px", marginBottom: "18px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "14px", marginBottom: "18px" }}>
         <div>
           <div style={labelStyle}>Commodity</div>
           <div style={{ fontSize: "16px", fontWeight: 700, color: meta.color }}>{meta.name}</div>
           <div style={{ ...subStyle, color: meta.color }}>{meta.difficulty} diff</div>
+        </div>
+        <div>
+          <div style={labelStyle}>Net so far</div>
+          <div style={{ fontSize: "16px", fontWeight: 700, color: "#F59E0B" }}>{formatUsdCents(active.est_net_usd_cents)}</div>
+          <div style={{ ...subStyle, color: "#52525b" }}>after 17% fee</div>
         </div>
         <div>
           <div style={labelStyle}>Staking Boost</div>

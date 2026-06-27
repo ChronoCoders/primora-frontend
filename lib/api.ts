@@ -115,3 +115,19 @@ export function getStaking(wallet: string): Promise<StakingSummary> {
     `/api/wallets/${encodeURIComponent(wallet)}/staking`,
   );
 }
+
+/// A wallet's total earnings over the last 24 hours, from
+/// GET /wallets/:wallet/earnings/24h. `total_gross_prm` is base-unit wei;
+/// `total_usd_cents` is net redemption USD (after the house edge).
+export type Earnings24h = {
+  total_gross_prm: string;
+  total_usd_cents: number;
+  payout_count: number;
+};
+
+/// Fetches a wallet's last-24h gross PRM and net USD earnings.
+export function getEarnings24h(wallet: string): Promise<Earnings24h> {
+  return getJson<Earnings24h>(
+    `/api/wallets/${encodeURIComponent(wallet)}/earnings/24h`,
+  );
+}

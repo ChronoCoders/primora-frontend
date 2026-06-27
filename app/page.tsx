@@ -4,7 +4,7 @@ import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 import { useQuery } from "@tanstack/react-query";
-import { getPayouts, getStaking, getEarnings, getSessions, type PayoutRow, type ChainStake, type EarningsRow, type SessionSummary } from "@/lib/api";
+import { getPayouts, getStaking, getEarnings, getEarnings24h, getSessions, type PayoutRow, type ChainStake, type EarningsRow, type SessionSummary } from "@/lib/api";
 import { chainLabel, chainIdFor, type Chain } from "@/lib/chain";
 import { publicClientFor } from "@/lib/clients";
 import { getContract } from "@/lib/contracts";
@@ -745,6 +745,33 @@ function clientLabel(clientType: string): string {
   return clientType;
 }
 
+function PrmEarned24hKpi() {
+  const { address, isConnected } = useAccount();
+  const { data, isLoading } = useQuery({
+    queryKey: ["earnings24h", address],
+    queryFn: () => {
+      if (!address) throw new Error("wallet not connected");
+      return getEarnings24h(address);
+    },
+    enabled: isConnected && Boolean(address),
+  });
+
+  let value = "—";
+  let sub: ReactNode = null;
+  let subColor: string | undefined;
+  if (!isConnected) {
+    value = "—";
+  } else if (isLoading) {
+    value = "…";
+  } else if (data) {
+    value = formatPrmWeiAmount(data.total_gross_prm);
+    sub = `≈ ${formatUsdCents(data.total_usd_cents)} net`;
+    subColor = "#F59E0B";
+  }
+
+  return <KpiCard kpi={{ label: "PRM Earned (24h)", value, sub, subColor }} />;
+}
+
 function MiningSpeedKpi() {
   const { address, isConnected } = useAccount();
   const { data, isLoading } = useQuery({
@@ -879,6 +906,7 @@ export default function OverviewPage() {
       <div className="kpi-grid">
         {PLACEHOLDER_KPIS.map((kpi) => {
           if (kpi.label === "Mining Speed") return <MiningSpeedKpi key={kpi.label} />;
+          if (kpi.label === "PRM Earned (24h)") return <PrmEarned24hKpi key={kpi.label} />;
           if (kpi.label === "Total Staked") return <TotalStakedKpi key={kpi.label} />;
           if (kpi.label === "Reserve Ratio") return <ReserveRatioKpi key={kpi.label} />;
           return <KpiCard key={kpi.label} kpi={kpi} />;

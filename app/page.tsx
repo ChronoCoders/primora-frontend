@@ -878,7 +878,11 @@ function ActiveMining() {
             <span style={{ fontSize: "15px", fontWeight: 600 }}>Active Mining</span>
             <span style={{ fontSize: "9px", padding: "2px 6px", background: "rgba(34,197,94,.1)", color: "#4ade80", borderRadius: "4px", fontWeight: 700 }}>LIVE</span>
           </div>
-          <div style={{ fontSize: "12px", color: "#4ade80" }}>{clientLabel(active.client_type)}</div>
+          <div style={{ fontSize: "12px", color: "#4ade80" }}>
+            {active.cpu_threads > 0
+              ? `${clientLabel(active.client_type)} · ${active.cpu_threads} threads`
+              : clientLabel(active.client_type)}
+          </div>
         </div>
         <div style={{ textAlign: "right" }}>
           <div className="tabnum font-display" style={{ fontSize: "36px", fontWeight: 700 }}>{active.avg_hashrate.toLocaleString("en-US")}</div>

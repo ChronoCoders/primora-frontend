@@ -29,6 +29,8 @@ export type SessionSummary = {
   avg_hashrate: number;
   /// Client software type, lowercase (e.g. "desktop").
   client_type: string;
+  /// CPU worker threads reported by the client; 0 if not reported.
+  cpu_threads: number;
   status: string;
   started_at: string;
   last_submission_at: string | null;

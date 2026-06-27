@@ -25,6 +25,10 @@ export type SessionSummary = {
   session_id: string;
   commodity: string;
   proof_count: number;
+  /// Running session average hashrate in H/s (not instantaneous); 0 until the first proof.
+  avg_hashrate: number;
+  /// Client software type, lowercase (e.g. "desktop").
+  client_type: string;
   status: string;
   started_at: string;
   last_submission_at: string | null;

@@ -41,6 +41,8 @@ export type SessionSummary = {
   site_code: string | null;
   /// City of the assigned node (e.g. "Johannesburg"), or null if not configured.
   site_city: string | null;
+  /// Whether the session is paused (proofs rejected until resumed).
+  paused: boolean;
   status: string;
   started_at: string;
   last_submission_at: string | null;
@@ -57,8 +59,7 @@ export class ApiError extends Error {
   }
 }
 
-async function getJson<T>(path: string): Promise<T> {
-  const res = await fetch(path, { headers: { accept: "application/json" } });
+async function unwrap<T>(res: Response): Promise<T> {
   if (!res.ok) {
     let message = `request failed with status ${res.status}`;
     try {
@@ -77,6 +78,20 @@ async function getJson<T>(path: string): Promise<T> {
     throw new ApiError(res.status, message);
   }
   return (await res.json()) as T;
+}
+
+async function getJson<T>(path: string): Promise<T> {
+  const res = await fetch(path, { headers: { accept: "application/json" } });
+  return unwrap<T>(res);
+}
+
+async function postJson<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(path, {
+    method: "POST",
+    headers: { "content-type": "application/json", accept: "application/json" },
+    body: JSON.stringify(body),
+  });
+  return unwrap<T>(res);
 }
 
 /// Fetches a wallet's payout history, newest first. `limit` defaults to the
@@ -102,6 +117,31 @@ export function getEarnings(wallet: string): Promise<EarningsRow[]> {
 export function getSessions(wallet: string): Promise<SessionSummary[]> {
   return getJson<SessionSummary[]>(
     `/api/wallets/${encodeURIComponent(wallet)}/sessions`,
+  );
+}
+
+/// Result of a pause/resume control action.
+export type SessionControl = { paused: boolean };
+
+/// Pauses a session (proofs rejected until resumed); requires the owning wallet.
+export function pauseSession(
+  sessionId: string,
+  wallet: string,
+): Promise<SessionControl> {
+  return postJson<SessionControl>(
+    `/api/sessions/${encodeURIComponent(sessionId)}/pause`,
+    { wallet },
+  );
+}
+
+/// Resumes a paused session; requires the owning wallet.
+export function resumeSession(
+  sessionId: string,
+  wallet: string,
+): Promise<SessionControl> {
+  return postJson<SessionControl>(
+    `/api/sessions/${encodeURIComponent(sessionId)}/resume`,
+    { wallet },
   );
 }
 

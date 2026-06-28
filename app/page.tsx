@@ -3,8 +3,8 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
-import { useQuery } from "@tanstack/react-query";
-import { getPayouts, getStaking, getEarnings, getEarnings24h, getSessions, type PayoutRow, type ChainStake, type EarningsRow, type SessionSummary } from "@/lib/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getPayouts, getStaking, getEarnings, getEarnings24h, getSessions, pauseSession, resumeSession, type PayoutRow, type ChainStake, type EarningsRow, type SessionSummary } from "@/lib/api";
 import { chainLabel, chainIdFor, type Chain } from "@/lib/chain";
 import { publicClientFor } from "@/lib/clients";
 import { getContract } from "@/lib/contracts";
@@ -835,6 +835,17 @@ function ActiveMining() {
     },
     enabled: isConnected && Boolean(address),
   });
+  const queryClient = useQueryClient();
+  const control = useMutation({
+    mutationFn: ({ id, action }: { id: string; action: "pause" | "resume" }) => {
+      if (!address) throw new Error("wallet not connected");
+      return action === "pause"
+        ? pauseSession(id, address)
+        : resumeSession(id, address);
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["sessions", address] }),
+  });
   const active = pickActiveSession(sessions);
 
   if (!isConnected || (!isLoading && !active)) {
@@ -874,9 +885,13 @@ function ActiveMining() {
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "18px" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-            <i className="fa-solid fa-microchip" style={{ color: "#4ade80", fontSize: "13px" }} />
+            <i className="fa-solid fa-microchip" style={{ color: active.paused ? "#F59E0B" : "#4ade80", fontSize: "13px" }} />
             <span style={{ fontSize: "15px", fontWeight: 600 }}>Active Mining</span>
-            <span style={{ fontSize: "9px", padding: "2px 6px", background: "rgba(34,197,94,.1)", color: "#4ade80", borderRadius: "4px", fontWeight: 700 }}>LIVE</span>
+            {active.paused ? (
+              <span style={{ fontSize: "9px", padding: "2px 6px", background: "rgba(245,158,11,.12)", color: "#F59E0B", borderRadius: "4px", fontWeight: 700 }}>PAUSED</span>
+            ) : (
+              <span style={{ fontSize: "9px", padding: "2px 6px", background: "rgba(34,197,94,.1)", color: "#4ade80", borderRadius: "4px", fontWeight: 700 }}>LIVE</span>
+            )}
           </div>
           <div style={{ fontSize: "12px", color: "#4ade80" }}>
             {active.cpu_threads > 0
@@ -937,7 +952,27 @@ function ActiveMining() {
             <span className="pulse" style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#52525b", display: "inline-block" }} />Awaiting proofs
           </span>
         )}
-        <Link href="/mine" style={{ fontSize: "11px", color: "#F59E0B", textDecoration: "none", fontWeight: 600 }}>Open Mine →</Link>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <button
+            type="button"
+            onClick={() => control.mutate({ id: active.session_id, action: active.paused ? "resume" : "pause" })}
+            disabled={control.isPending}
+            style={{
+              fontSize: "11px",
+              fontWeight: 600,
+              padding: "5px 12px",
+              borderRadius: "6px",
+              border: "none",
+              cursor: control.isPending ? "default" : "pointer",
+              opacity: control.isPending ? 0.6 : 1,
+              background: "rgba(34,197,94,.12)",
+              color: "#4ade80",
+            }}
+          >
+            {active.paused ? "Resume" : "Pause"}
+          </button>
+          <Link href="/mine" style={{ fontSize: "11px", color: "#F59E0B", textDecoration: "none", fontWeight: 600 }}>Open Mine →</Link>
+        </div>
       </div>
     </div>
   );

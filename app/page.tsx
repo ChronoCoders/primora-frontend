@@ -906,11 +906,19 @@ function ActiveMining() {
           <div style={{ fontSize: "16px", fontWeight: 700, color: "#F59E0B" }}>{boostText}</div>
           <div style={{ ...subStyle, color: "#52525b" }}>effective</div>
         </div>
-        <div>
-          <div style={labelStyle}>Proofs</div>
-          <div style={{ fontSize: "16px", fontWeight: 700 }}>{active.proof_count}</div>
-          <div style={{ ...subStyle, color: "#52525b" }}>submitted</div>
-        </div>
+        {active.site_code ? (
+          <div>
+            <div style={labelStyle}>Site</div>
+            <div style={{ fontSize: "16px", fontWeight: 700 }}>{active.site_code}</div>
+            <div style={{ ...subStyle, color: "#52525b" }}>{active.site_city ?? ""}</div>
+          </div>
+        ) : (
+          <div>
+            <div style={labelStyle}>Proofs</div>
+            <div style={{ fontSize: "16px", fontWeight: 700 }}>{active.proof_count}</div>
+            <div style={{ ...subStyle, color: "#52525b" }}>submitted</div>
+          </div>
+        )}
       </div>
 
       <div style={{ paddingTop: "14px", borderTop: "1px solid #1f1f1f", display: "flex", alignItems: "center", justifyContent: "space-between" }}>

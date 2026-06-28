@@ -37,6 +37,10 @@ export type SessionSummary = {
   rejected_proof_count: number;
   /// Net USD (cents) earned so far this session (grounded, not a projection); 0 if unavailable.
   est_net_usd_cents: number;
+  /// Site code of the assigned node (e.g. "JHB"), or null if not configured.
+  site_code: string | null;
+  /// City of the assigned node (e.g. "Johannesburg"), or null if not configured.
+  site_city: string | null;
   status: string;
   started_at: string;
   last_submission_at: string | null;

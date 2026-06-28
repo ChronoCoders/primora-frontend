@@ -329,12 +329,12 @@ type Site = {
 };
 
 const PLACEHOLDER_SITES: Site[] = [
-  { name: "Johannesburg", location: "South Africa · Vultr", comms: [{ label: "Au", color: "#D4A847" }, { label: "Pt", color: "#C8D4DC" }], active: true },
-  { name: "Amsterdam", location: "Netherlands · DigitalOcean", comms: [{ label: "Ag", color: "#A8B4C0" }] },
-  { name: "Dallas", location: "United States · Akamai", comms: [{ label: "WTI", color: "#94a3b8" }] },
-  { name: "Toronto", location: "Canada · Vultr", comms: [{ label: "Au", color: "#D4A847" }] },
-  { name: "Warsaw", location: "Poland · Vultr", comms: [{ label: "Ag", color: "#A8B4C0" }] },
-  { name: "Dubai", location: "UAE · Vultr", comms: [{ label: "WTI", color: "#94a3b8" }] },
+  { name: "Johannesburg", location: "South Africa", comms: [{ label: "Au", color: "#D4A847" }, { label: "Pt", color: "#C8D4DC" }], active: true },
+  { name: "Amsterdam", location: "Netherlands", comms: [{ label: "Ag", color: "#A8B4C0" }] },
+  { name: "Dallas", location: "United States", comms: [{ label: "WTI", color: "#94a3b8" }] },
+  { name: "Toronto", location: "Canada", comms: [{ label: "Au", color: "#D4A847" }] },
+  { name: "Warsaw", location: "Poland", comms: [{ label: "Ag", color: "#A8B4C0" }] },
+  { name: "Dubai", location: "UAE", comms: [{ label: "WTI", color: "#94a3b8" }] },
 ];
 
 const labelStyle: CSSProperties = { fontSize: "10px", color: "#52525b", marginBottom: "3px" };

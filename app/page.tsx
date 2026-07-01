@@ -97,7 +97,7 @@ const STAKING_MAX_BOOST_BPS = 4000;
 const STAKING_LOCK_LABELS: Record<number, string> = { 0: "30d", 1: "90d", 2: "180d" };
 const PRM_DECIMALS = 18n;
 
-function formatPrmWeiAmount(weiStr: string): string {
+export function formatPrmWeiAmount(weiStr: string): string {
   let wei: bigint;
   try {
     wei = BigInt(weiStr);
@@ -131,7 +131,7 @@ function formatPrmWeiShort(weiStr: string): string {
   return frac.length > 0 ? `${grouped}.${frac}` : grouped;
 }
 
-function formatUsdCents(cents: number | null | undefined): string {
+export function formatUsdCents(cents: number | null | undefined): string {
   if (cents == null) return "—";
   const c = BigInt(cents);
   const sign = c < 0n ? "-" : "";
@@ -252,7 +252,7 @@ const shortDate = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
 });
 
-function formatDate(iso: string): string {
+export function formatDate(iso: string): string {
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? iso : shortDate.format(d);
 }
@@ -274,7 +274,7 @@ const COMMODITY_BADGES: Record<string, Badge> = {
   wti: { label: "WTI · Crude Oil", bg: "rgba(148,163,184,.08)", color: "#94a3b8" },
 };
 
-function commodityBadge(commodity: string): Badge {
+export function commodityBadge(commodity: string): Badge {
   return (
     COMMODITY_BADGES[commodity.toLowerCase()] ?? {
       ...FALLBACK_BADGE,
@@ -292,13 +292,13 @@ function isChain(value: string): value is Chain {
   return value === "ethereum" || value === "polygon";
 }
 
-function chainBadge(chain: string): Badge {
+export function chainBadge(chain: string): Badge {
   return isChain(chain)
     ? { label: chainLabel(chain), ...CHAIN_BADGES[chain] }
     : { ...FALLBACK_BADGE, label: chain };
 }
 
-const PAYOUT_COLUMNS = [
+export const PAYOUT_COLUMNS = [
   { label: "Date", align: "left" as const, width: "20%" },
   { label: "Commodity", align: "left" as const, width: "18%" },
   { label: "Chain", align: "left" as const, width: "14%" },
@@ -347,7 +347,7 @@ function KpiCard({ kpi }: { kpi: Kpi }) {
   );
 }
 
-function PayoutStateRow({ message }: { message: string }) {
+export function PayoutStateRow({ message }: { message: string }) {
   return (
     <tr>
       <td
@@ -472,7 +472,7 @@ function commodityOrderIndex(commodity: string): number {
   return i === -1 ? COMMODITY_ORDER.length : i;
 }
 
-function EarningsByCommodity() {
+export function EarningsByCommodity() {
   const { address, isConnected } = useAccount();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["earnings", address],
@@ -872,7 +872,7 @@ function CompanyMiningShareKpi() {
   );
 }
 
-function ActiveMining() {
+export function ActiveMining() {
   const { address, isConnected } = useAccount();
   const { data: sessions, isLoading } = useQuery({
     queryKey: ["sessions", address],

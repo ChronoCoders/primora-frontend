@@ -4,7 +4,7 @@ import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getPayouts, getStaking, getEarnings, getEarnings24h, getSessions, getCompanyMiningShare, pauseSession, resumeSession, type PayoutRow, type ChainStake, type EarningsRow, type SessionSummary } from "@/lib/api";
+import { getPayouts, getStaking, getEarnings, getEarnings24h, getSessions, getCompanyMiningShare, getReserve, pauseSession, resumeSession, type PayoutRow, type ChainStake, type EarningsRow, type SessionSummary } from "@/lib/api";
 import { chainLabel, chainIdFor, type Chain } from "@/lib/chain";
 import { publicClientFor } from "@/lib/clients";
 import { getContract } from "@/lib/contracts";
@@ -692,6 +692,11 @@ function ReserveHealth() {
     queryFn: readReserve,
     refetchInterval: 60_000,
   });
+  const reserve = useQuery({
+    queryKey: ["reserve-absolute"],
+    queryFn: getReserve,
+    refetchInterval: 60_000,
+  });
 
   const ratioBps = data?.ratioBps ?? null;
   const health = ratioBps != null ? reserveHealth(ratioBps) : null;
@@ -705,6 +710,17 @@ function ReserveHealth() {
         ? "unavailable"
         : "no PRM minted yet";
   const edgeText = isLoading ? "…" : data ? formatEdge(data.edgeBps) : "—";
+
+  const reserveChains = reserve.data?.chains ?? [];
+  const totalHeldText = reserve.isLoading
+    ? "…"
+    : reserve.isError || !reserve.data
+      ? "—"
+      : formatUsd(BigInt(reserve.data.total_reserve_usd), 6);
+  const redeemedText =
+    reserve.data && BigInt(reserve.data.total_redeemed_usd) > 0n
+      ? formatUsd(BigInt(reserve.data.total_redeemed_usd), 6)
+      : null;
 
   return (
     <div className="card" style={{ padding: "20px" }}>
@@ -726,6 +742,32 @@ function ReserveHealth() {
           ))}
         </tbody>
       </table>
+      <div style={{ marginTop: "12px", paddingTop: "10px", borderTop: "1px solid #1a1a1a" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", marginBottom: "5px" }}>
+          <span style={{ color: "#71717a" }}>Reserve held (on-chain)</span>
+          <span style={{ fontWeight: 700 }}>{totalHeldText}</span>
+        </div>
+        {reserveChains.map((c) => (
+          <div key={c.chain} style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#a1a1aa", padding: "1px 0" }}>
+            <span>{chainLabel(c.chain as Chain)}</span>
+            <span>
+              {c.available
+                ? `${formatUsd(BigInt(c.usdc), 6)} USDC + ${formatUsd(BigInt(c.usdt), 6)} USDT`
+                : "unavailable"}
+            </span>
+          </div>
+        ))}
+        {redeemedText ? (
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#71717a", padding: "2px 0" }}>
+            <span>Redeemed to date</span>
+            <span>{redeemedText}</span>
+          </div>
+        ) : null}
+        <div style={{ fontSize: "9px", color: "#52525b", marginTop: "5px", lineHeight: 1.4 }}>
+          Absolute holdings are real on-chain balances. The ratio above (Ethereum) is coverage vs
+          circulating-PRM value, priced at the provisional $0.10 reference until PRM trades.
+        </div>
+      </div>
       <div style={{ marginTop: "12px", paddingTop: "10px", borderTop: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", fontSize: "11px" }}>
         <span style={{ color: "#71717a" }}>House edge</span>
         <span style={{ fontWeight: 600 }}>{edgeText}</span>

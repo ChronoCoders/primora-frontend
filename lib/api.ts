@@ -199,3 +199,29 @@ export type CompanyMiningShare = {
 export function getCompanyMiningShare(): Promise<CompanyMiningShare> {
   return getJson<CompanyMiningShare>("/api/entity/share");
 }
+
+/// One chain's absolute Treasury reserve holdings from GET /reserve. All amounts
+/// are 6-decimal stablecoin base units as strings (divide by 1e6 for USD).
+/// `available` is false when that chain's on-chain read failed.
+export type ChainReserve = {
+  chain: string;
+  usdc: string;
+  usdt: string;
+  total_usd: string;
+  total_redeemed_usd: string;
+  available: boolean;
+};
+
+/// Absolute USDC/USDT reserve holdings per chain and combined (Spec §11.1/§12),
+/// read live on-chain from each Treasury. Assumption-free -- unlike the reserve
+/// ratio, whose denominator uses the provisional $0.10 PRM reference price.
+export type ReserveResponse = {
+  chains: ChainReserve[];
+  total_reserve_usd: string;
+  total_redeemed_usd: string;
+};
+
+/// Fetches the absolute reserve holdings (per chain + combined total, redeemed).
+export function getReserve(): Promise<ReserveResponse> {
+  return getJson<ReserveResponse>("/api/reserve");
+}

@@ -255,3 +255,46 @@ export type WalletAlert = {
 export function getAlerts(wallet: string): Promise<WalletAlert[]> {
   return getJson<WalletAlert[]>(`/api/wallets/${encodeURIComponent(wallet)}/alerts`);
 }
+
+/// A commodity's static base mining parameters from GET /commodities.
+/// `difficulty`/`multiplier` are decimal strings (e.g. "4.0", "3.2"). These are
+/// base values — the weekly dynamic difficulty recompute (§3.3) is not active.
+export type CommodityParams = {
+  commodity: string;
+  difficulty: string;
+  multiplier: string;
+};
+
+/// Fetches per-commodity base difficulty + multiplier (static base values).
+export function getCommodities(): Promise<CommodityParams[]> {
+  return getJson<CommodityParams[]>("/api/commodities");
+}
+
+/// A pre-session earnings estimate from GET /estimate. `net_usd_cents` is AFTER
+/// the live house edge (the headline; null if the spot price was unavailable) and
+/// includes the staking boost. `hashrate_basis` is "personal" (from the wallet's
+/// active session) or "reference" (nominal). Always an estimate, not a guarantee.
+export type EstimateResponse = {
+  commodity: string;
+  hashrate_used: number;
+  hashrate_basis: string;
+  duration_secs: number;
+  spot_price: string | null;
+  house_edge_bps: number;
+  effective_boost_bps: number;
+  gross_prm_wei: string;
+  net_usd_cents: number | null;
+  is_estimate: boolean;
+};
+
+/// Fetches a live earnings estimate (net after the live house edge, at the live
+/// spot price). Pass the connected wallet for a personal hashrate basis + boost.
+export function getEstimate(
+  commodity: string,
+  durationSecs: number,
+  wallet?: string,
+): Promise<EstimateResponse> {
+  const params = new URLSearchParams({ commodity, duration_secs: String(durationSecs) });
+  if (wallet) params.set("wallet", wallet);
+  return getJson<EstimateResponse>(`/api/estimate?${params.toString()}`);
+}

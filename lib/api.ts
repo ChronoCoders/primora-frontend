@@ -238,3 +238,20 @@ export type SiteInfo = {
 export function getSites(): Promise<SiteInfo[]> {
   return getJson<SiteInfo[]>("/api/sites");
 }
+
+/// A user-facing alert about the wallet's OWN activity, from GET /wallets/:w/alerts.
+/// User-safe only: `kind` is a neutral category (under_review / payout_confirmed /
+/// payout_rejected / payout_processing) and `message` is plain language. No
+/// anti-cheat internals (which signal fired, score, or level) are ever included.
+export type WalletAlert = {
+  session_id: string;
+  kind: string;
+  message: string;
+  timestamp: string;
+};
+
+/// Fetches the connected wallet's own alerts (session review status + payout
+/// lifecycle), newest first. Strictly wallet-scoped.
+export function getAlerts(wallet: string): Promise<WalletAlert[]> {
+  return getJson<WalletAlert[]>(`/api/wallets/${encodeURIComponent(wallet)}/alerts`);
+}

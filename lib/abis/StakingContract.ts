@@ -55,19 +55,6 @@ export const stakingContractAbi = [
   },
   {
     "type": "function",
-    "name": "MIN_STAKE",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "MULT_180",
     "inputs": [],
     "outputs": [
@@ -213,6 +200,16 @@ export const stakingContractAbi = [
         "name": "_primToken",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "_minStake",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_lockRequired",
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
     "outputs": [],
@@ -255,6 +252,32 @@ export const stakingContractAbi = [
       }
     ],
     "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "lockRequired",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "minStake",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",

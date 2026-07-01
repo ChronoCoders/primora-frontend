@@ -112,7 +112,7 @@ export function formatPrmWeiAmount(weiStr: string): string {
   return frac.length > 0 ? `${grouped}.${frac}` : grouped;
 }
 
-function formatPrmWei(weiStr: string): string {
+export function formatPrmWei(weiStr: string): string {
   return `${formatPrmWeiAmount(weiStr)} PRM`;
 }
 
@@ -141,7 +141,7 @@ export function formatUsdCents(cents: number | null | undefined): string {
   return `${sign}$${dollars}.${rem}`;
 }
 
-function formatBoost(bps: number): string {
+export function formatBoost(bps: number): string {
   const pct = bps / 100;
   const pctStr = Number.isInteger(pct) ? pct.toString() : pct.toFixed(1);
   return `+${pctStr}%${bps >= STAKING_MAX_BOOST_BPS ? " (max)" : ""}`;

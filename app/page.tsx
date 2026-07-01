@@ -4,7 +4,7 @@ import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getPayouts, getStaking, getEarnings, getEarnings24h, getSessions, pauseSession, resumeSession, type PayoutRow, type ChainStake, type EarningsRow, type SessionSummary } from "@/lib/api";
+import { getPayouts, getStaking, getEarnings, getEarnings24h, getSessions, getCompanyMiningShare, pauseSession, resumeSession, type PayoutRow, type ChainStake, type EarningsRow, type SessionSummary } from "@/lib/api";
 import { chainLabel, chainIdFor, type Chain } from "@/lib/chain";
 import { publicClientFor } from "@/lib/clients";
 import { getContract } from "@/lib/contracts";
@@ -48,22 +48,8 @@ const PLACEHOLDER_KPIS: Kpi[] = [
     subColor: "#4ade80",
   },
   {
-    label: "Entity Share",
-    labelColor: "#F59E0B",
-    value: "4.8%",
-    accentBorder: true,
-    sub: (
-      <a
-        href="#"
-        style={{
-          color: "#F59E0B",
-          textDecoration: "none",
-          fontSize: "10px",
-        }}
-      >
-        On-chain proof →
-      </a>
-    ),
+    label: "Company Mining Share",
+    value: "",
   },
   {
     label: "Reserve Ratio",
@@ -817,6 +803,33 @@ function MiningSpeedKpi() {
   return <KpiCard kpi={{ label: "Mining Speed", value, valueColor, sub }} />;
 }
 
+function CompanyMiningShareKpi() {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["company-mining-share"],
+    queryFn: getCompanyMiningShare,
+  });
+
+  let value = "…";
+  if (isError) {
+    value = "—";
+  } else if (!isLoading && data) {
+    value = `${(data.share_bps / 100).toFixed(1)}%`;
+  }
+
+  return (
+    <KpiCard
+      kpi={{
+        label: "Company Mining Share",
+        labelColor: "#F59E0B",
+        value,
+        accentBorder: true,
+        sub: "Cumulative share of all PRM mined; declines as users mine",
+        subColor: "#71717a",
+      }}
+    />
+  );
+}
+
 function ActiveMining() {
   const { address, isConnected } = useAccount();
   const { data: sessions, isLoading } = useQuery({
@@ -988,6 +1001,7 @@ export default function OverviewPage() {
           if (kpi.label === "PRM Earned (24h)") return <PrmEarned24hKpi key={kpi.label} />;
           if (kpi.label === "Total Staked") return <TotalStakedKpi key={kpi.label} />;
           if (kpi.label === "Reserve Ratio") return <ReserveRatioKpi key={kpi.label} />;
+          if (kpi.label === "Company Mining Share") return <CompanyMiningShareKpi key={kpi.label} />;
           return <KpiCard key={kpi.label} kpi={kpi} />;
         })}
       </div>

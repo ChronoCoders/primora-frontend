@@ -183,3 +183,19 @@ export function getEarnings24h(wallet: string): Promise<Earnings24h> {
     `/api/wallets/${encodeURIComponent(wallet)}/earnings/24h`,
   );
 }
+
+/// The company's cumulative, confirmed-only share of all PRM mined (Spec §12),
+/// summed across both chains, from GET /entity/share. Global, not wallet-scoped.
+/// `share_bps` is basis points (0..=10000); 0 until the first confirmed mint or
+/// when no company wallet is configured. `company_wallet` is null when unset.
+export type CompanyMiningShare = {
+  company_prm_wei: string;
+  total_prm_wei: string;
+  share_bps: number;
+  company_wallet: string | null;
+};
+
+/// Fetches the global Company Mining Share (company vs total confirmed mining).
+export function getCompanyMiningShare(): Promise<CompanyMiningShare> {
+  return getJson<CompanyMiningShare>("/api/entity/share");
+}

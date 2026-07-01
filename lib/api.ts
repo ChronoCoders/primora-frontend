@@ -225,3 +225,16 @@ export type ReserveResponse = {
 export function getReserve(): Promise<ReserveResponse> {
   return getJson<ReserveResponse>("/api/reserve");
 }
+
+/// A mining site from the NODE_SITES roster (Spec §3.4), from GET /sites.
+/// Geography only -- code, city, ISO country. No provider/vendor identity.
+export type SiteInfo = {
+  code: string;
+  city: string;
+  country: string;
+};
+
+/// Fetches the mining-site roster (real NODE_SITES config, geography only).
+export function getSites(): Promise<SiteInfo[]> {
+  return getJson<SiteInfo[]>("/api/sites");
+}

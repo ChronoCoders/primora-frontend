@@ -6,6 +6,7 @@ import { useAccount } from "wagmi";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getPayouts, getStaking, getEarnings, getEarnings24h, getSessions, getCompanyMiningShare, getReserve, pauseSession, resumeSession, type PayoutRow, type ChainStake, type EarningsRow, type SessionSummary } from "@/lib/api";
 import { chainLabel, chainIdFor, type Chain } from "@/lib/chain";
+import { MiningSites } from "@/components/MiningSites";
 import { publicClientFor } from "@/lib/clients";
 import { getContract } from "@/lib/contracts";
 import { PRM_REFERENCE_PRICE_8DEC } from "@/lib/constants";
@@ -305,22 +306,6 @@ export const PAYOUT_COLUMNS = [
   { label: "PRM", align: "right" as const, width: "16%" },
   { label: "Net USDC", align: "right" as const, width: "16%" },
   { label: "Tx", align: "right" as const, width: undefined },
-];
-
-type Site = {
-  name: string;
-  location: string;
-  comms: { label: string; color: string }[];
-  active?: boolean;
-};
-
-const PLACEHOLDER_SITES: Site[] = [
-  { name: "Johannesburg", location: "South Africa", comms: [{ label: "Au", color: "#D4A847" }, { label: "Pt", color: "#C8D4DC" }], active: true },
-  { name: "Amsterdam", location: "Netherlands", comms: [{ label: "Ag", color: "#A8B4C0" }] },
-  { name: "Dallas", location: "United States", comms: [{ label: "WTI", color: "#94a3b8" }] },
-  { name: "Toronto", location: "Canada", comms: [{ label: "Au", color: "#D4A847" }] },
-  { name: "Warsaw", location: "Poland", comms: [{ label: "Ag", color: "#A8B4C0" }] },
-  { name: "Dubai", location: "UAE", comms: [{ label: "WTI", color: "#94a3b8" }] },
 ];
 
 const labelStyle: CSSProperties = { fontSize: "10px", color: "#52525b", marginBottom: "3px" };
@@ -1068,34 +1053,7 @@ export default function OverviewPage() {
       <RecentPayouts />
 
       {/* Mining sites */}
-      <div className="card" style={{ padding: "22px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-          <div style={{ fontWeight: 600, fontSize: "14px" }}>Mining Sites</div>
-          <div style={{ fontSize: "11px", color: "#52525b" }}>Auto-routed by commodity · 6/6 online</div>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "10px" }}>
-          {PLACEHOLDER_SITES.map((site) => (
-            <div key={site.name} style={{ background: "#0d0d0f", border: site.active ? "1px solid rgba(245,158,11,.2)" : "1px solid #1a1a1a", borderRadius: "14px", padding: "14px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                <span style={{ fontSize: "13px", fontWeight: 600 }}>{site.name}</span>
-                <span className="pulse" style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />
-              </div>
-              <div style={{ fontSize: "10px", color: "#71717a", marginBottom: "4px" }}>{site.location}</div>
-              <div style={{ fontSize: "10px" }}>
-                {site.comms.map((c, i) => (
-                  <span key={c.label}>
-                    {i > 0 ? " · " : ""}
-                    <span style={{ color: c.color }}>{c.label}</span>
-                  </span>
-                ))}
-              </div>
-              {site.active ? (
-                <div style={{ fontSize: "10px", color: "#F59E0B", marginTop: "4px", fontWeight: 600 }}>Your active site</div>
-              ) : null}
-            </div>
-          ))}
-        </div>
-      </div>
+      <MiningSites />
     </>
   );
 }

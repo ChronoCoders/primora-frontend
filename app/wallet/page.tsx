@@ -104,8 +104,10 @@ function Earnings24hCard() {
         </div>
       </div>
       <div style={{ marginTop: "14px", paddingTop: "12px", borderTop: "1px solid #1a1a1a", fontSize: "10px", color: "#52525b", lineHeight: 1.5 }}>
-        Redemption to USDC/USDT is currently operator-processed — self-serve redeem is not
-        enabled yet. Buying and selling PRM opens with the exchange at launch.
+        Redemptions to USDC/USDT are reviewed and approved by an operator before payout — a
+        deliberate safeguard that checks each request against session validity and reserve
+        health before funds leave the treasury. Buying and selling PRM opens with the
+        exchange at launch.
       </div>
     </div>
   );
